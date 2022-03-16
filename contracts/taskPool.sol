@@ -58,12 +58,13 @@ contract TaskPool {
     }
 
     modifier isTaskActive(uint taskId) {
-        require(tasks[taskId].status = TaskStatus.TODO tasks[taskId].status = TaskStatus.ONGOING|| , "Task is not active!");
+        require(tasks[taskId].status == TaskStatus.TODO || tasks[taskId].status == TaskStatus.ONGOING , "Task is not active!");
         _;
     }
 
     modifier isValidTaskID(uint taskId){
-        require(taskId < counter && taskId > 0, "Invalid Task ID");
+        require(taskId <= counter && taskId > 0, "Invalid Task ID");
+        _;
     }
     
 
@@ -77,7 +78,7 @@ contract TaskPool {
     /**
     Create the task by the owner.
      */
-    function createTask(uint256 price, string calldata content) public payable isOwner returns(bool){
+    function createTask(uint256 price, string calldata content) public payable isOwner{
         require(msg.value >= price, "Insufficient value.");
 
         tasks[counter].taskId = counter;
@@ -86,14 +87,13 @@ contract TaskPool {
         tasks[counter].commissionFee = price;
         tasks[counter].status = TaskStatus.TODO;
         counter+=1;
-        return true;
     }
 
     /**
     cancel the task by the owner, the task is allowed to be canceled when it is uncompleted.
     If the task is in status of ongoing, the owner shall be deducted half of the commision fee
     */
-    function cancelTaskByOwner(uint taskId) public isTaskActive(taskId) isValidTaskID(taskId) returns (bool) {
+    function cancelTaskByOwner(uint taskId) public isTaskActive(taskId) isValidTaskID(taskId){
         
         TaskStatus _status = tasks[taskId].status;
         
@@ -105,8 +105,6 @@ contract TaskPool {
             _owner.transfer(tasks[taskId].commissionFee / 2);
         }
         tasks[taskId].status = TaskStatus.CLOSED;
-        
-        return true;
     }
     
     // function getOngoingTasks() public returns (Task[] memory) {
@@ -148,7 +146,7 @@ contract TaskPool {
     /**
     Cancel the task application by the freelancer
      */
-    function cancelApplication(uint taskId) public beforeAssignTaskTaker(taskId, msg.sender) returns (bool) {
+    function cancelApplication(uint taskId) public beforeAssignTaskTaker(taskId, msg.sender){
         Task storage task = tasks[taskId];
         for (uint i = 0; i < task.applier.length; i++) {
             if (task.applier[i] == msg.sender) {
