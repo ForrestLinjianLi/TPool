@@ -53,9 +53,6 @@ contract TaskPool {
     }
 
     modifier isTaskCompleted(uint taskId) {
-<<<<<<< HEAD
-        require(tasks[taskId].status == TaskStatus.FINISHED, "The task is not completed yet!!!");
-=======
         require(tasks[taskId].status >= TaskStatus.FINISHED, "Task is in progress!");
         _;
     }
@@ -64,7 +61,6 @@ contract TaskPool {
         require(tasks[taskId].status <= TaskStatus.ONGOING, "Task is already taken!");
         require(tasks[taskId].status != TaskStatus.NONE, "Task does not exist!");
         require(freelancers[flId].isOccupying, "The task taker has another ongoing task, each task taker can only have one task");
->>>>>>> 0122b460b88472bade4cf27caf6425fd2a7ace73
         _;
     }
 
@@ -78,6 +74,7 @@ contract TaskPool {
         tasks[counter].commissionFee = price;
         tasks[counter].status = TaskStatus.TODO;
         counter+=1;
+        
         return true;
     }
 
@@ -88,11 +85,8 @@ contract TaskPool {
     function cancelTaskByOwner(uint taskId) public isTaskCompleted(taskId) returns (bool) {
         require(taskId < counter && taskId > 0, "Invalid Task ID");
         TaskStatus _status = tasks[taskId].status;
-<<<<<<< HEAD
         require(_status == TaskStatus.TODO || _status == TaskStatus.ONGOING, "The task has been closed or finished, you cannot cancel it now");
         
-=======
->>>>>>> 0122b460b88472bade4cf27caf6425fd2a7ace73
         if (_status == TaskStatus.TODO) {
             require(address(this).balance >= tasks[taskId].commissionFee);
             _owner.transfer(tasks[taskId].commissionFee);
