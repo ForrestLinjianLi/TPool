@@ -16,7 +16,8 @@ contract TaskPool {
         counter = 1;
     }
 
-    enum TaskStatus{ TODO, ONGOING, FINISHED, CLOSED }
+    enum TaskStatus{ NONE, TODO, ONGOING, FINISHED, CLOSED }
+    TaskStatus constant defaultTaksStatus = TaskStatus.NONE;
 
     struct Task {
         uint taskId;
@@ -42,6 +43,7 @@ contract TaskPool {
     mapping (address => Freelancer) public freelancers;
     mapping (uint => Task) public tasks;
 
+    uint taskCount;
     event createdTask(address _from);
     event cancel(address _from);
 
@@ -51,7 +53,7 @@ contract TaskPool {
     }
 
     modifier isTaskCompleted(uint taskId) {
-        require(tasks[taskId].status, "Only owner can create tasks!!!");
+        require(tasks[taskId].status == , "Only owner can create tasks!!!");
         _;
     }
 
@@ -64,7 +66,6 @@ contract TaskPool {
         tasks[counter].description = content;
         tasks[counter].commissionFee = price;
         tasks[counter].status = 0;
-        // tasks[counter].applier = [];
         return true;
     }
 
