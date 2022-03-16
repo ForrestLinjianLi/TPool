@@ -143,19 +143,19 @@ contract TaskPool {
      */
     function applyTask(uint taskId) public beforeAssignTaskTaker(taskId, msg.sender) {
         Task storage task = tasks[taskId];
-        for (uint i = 0; i < task.applier.length; i++) {
-            if (task.applier[i] == msg.sender) {
-                delete task.applier[i];
-                break;
-            }
-        }
+        task.applier.push(msg.sender);
     }
     /**
     Cancel the task application by the freelancer
      */
     function cancelApplication(uint taskId) public beforeAssignTaskTaker(taskId, msg.sender) returns (bool) {
         Task storage task = tasks[taskId];
-        task.applier.push(msg.sender);
+        for (uint i = 0; i < task.applier.length; i++) {
+            if (task.applier[i] == msg.sender) {
+                delete task.applier[i];
+                break;
+            }
+        }
     }
 
     /**
