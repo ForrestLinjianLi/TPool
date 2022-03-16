@@ -48,7 +48,7 @@ contract TaskPool {
     event cancel(address _from);
 
     modifier isOwner {
-        require(msg.sender == _owner, "Only owner can create tasks!!!");
+        require(msg.sender == _owner, "Only owner can operate this!!!");
         _;
     }
 
@@ -74,6 +74,7 @@ contract TaskPool {
         tasks[counter].commissionFee = price;
         tasks[counter].status = TaskStatus.TODO;
         counter+=1;
+        
         return true;
     }
 
@@ -84,6 +85,8 @@ contract TaskPool {
     function cancelTaskByOwner(uint taskId) public isTaskCompleted(taskId) returns (bool) {
         require(taskId < counter && taskId > 0, "Invalid Task ID");
         TaskStatus _status = tasks[taskId].status;
+        require(_status == TaskStatus.TODO || _status == TaskStatus.ONGOING, "The task has been closed or finished, you cannot cancel it now");
+        
         if (_status == TaskStatus.TODO) {
             require(address(this).balance >= tasks[taskId].commissionFee);
             _owner.transfer(tasks[taskId].commissionFee);
@@ -91,6 +94,8 @@ contract TaskPool {
             require(address(this).balance >= (tasks[taskId].commissionFee)/2);
             _owner.transfer(tasks[taskId].commissionFee / 2);
         }
+        _status = TaskStatus.CLOSED;
+        
         return true;
     }
     
@@ -114,8 +119,8 @@ contract TaskPool {
     /**
     Confirm the task takers of all the tasks based on the freelancers' credits
      */
-    function confirmTaskTakers() public returns (bool){
-
+    function confirmTaskTakers() public returns (bool) isOwner(){
+        
     }
 
     // function getBalance() public returns (uint256) {
