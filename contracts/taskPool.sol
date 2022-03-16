@@ -163,9 +163,13 @@ contract TaskPool {
     Cancel the ongoing task by the freelancer, and the freelancer shall not recieve any 
     commision fee, and gain panelty on credits.
      */
-    function cancelOngoingTaskByFreelancer(uint taskId) public  {
+    function cancelOngoingTaskByFreelancer(uint taskId) public {
         require(tasks[taskId].status == TaskStatus.ONGOING, "The task status should be ongoing.");
-        freelancers[msg.sender].
+        uint[] storage freelancer = freelancers[msg.sender];
+        require(freelancer.currentTaskId == taskId, "The current task that this freelance is taking does not match this task.");
+        freelancer.currentTaskId = 0;
+        tasks[taskId].isOccupying = false;
+        tasks[taskId].status = Task.CLOSED;
     }
 
     function balanceOfContract() public view returns (uint256) {
