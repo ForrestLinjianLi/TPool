@@ -16,19 +16,15 @@ contract TaskPool {
         counter = 1;
     }
 
-   
-    /**
-    status = 0 means the task is available 
-    status = 1 means the task is ongoing
-    status = 2 means the task is completed
-     */
+    enum TaskStatus{ TODO, ONGOING, FINISHED, CLOSED }
+
     struct Task {
         uint taskId;
         address taker;
         string description;
         uint commissionFee;
         uint256 deadline;
-        uint status;
+        TaskStatus status;
         address[] applier;
     }
 
@@ -54,8 +50,9 @@ contract TaskPool {
         _;
     }
 
-    modifier isTaskCompleted {
-        
+    modifier isTaskCompleted(uint taskId) {
+        require(tasks[taskId].status, "Only owner can create tasks!!!");
+        _;
     }
 
     /**
@@ -83,7 +80,7 @@ contract TaskPool {
             _owner.transfer(tasks[taskId].commissionFee);
         } else {
             require(address(this).balance >= (tasks[taskId].commissionFee)*0.5);
-            _owner.transfer(tasks[taskId].commissionFee * 0.5);
+            _owner.transfer(tasks[taskId].commissionFee / 2);
         }
         return true;
     }
