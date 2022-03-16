@@ -53,7 +53,14 @@ contract TaskPool {
     }
 
     modifier isTaskCompleted(uint taskId) {
-        require(tasks[taskId].status == , "Only owner can create tasks!!!");
+        require(tasks[taskId].status >= TaskStatus.FINISHED, "Task is in progress!");
+        _;
+    }
+
+    modifier beforeAssignTaskTaker(uint taskId, address flId) {
+        require(tasks[taskId].status <= TaskStatus.ONGOING, "Task is already taken!");
+        require(tasks[taskId].status != TaskStatus.NONE, "Task does not exist!");
+        require(freelancers[flId].isOccupying, "The task taker has another ongoing task, each task taker can only have one task");
         _;
     }
 
@@ -65,7 +72,7 @@ contract TaskPool {
         tasks[counter].taker = address(0);
         tasks[counter].description = content;
         tasks[counter].commissionFee = price;
-        tasks[counter].status = 0;
+        tasks[counter].status = TaskStatus.TODO;
         return true;
     }
 
@@ -73,14 +80,13 @@ contract TaskPool {
     cancel the task by the owner, the task is allowed to be canceled when it is uncompleted.
     If the task is in status of ongoing, the owner shall be deducted half of the commision fee
     */
-    function cancelTaskByOwner(uint taskId) public returns (bool) {
-        const _status = tasks[taskId].status;
-        require(_status != 2, "The task has been completed, you cannot cancel it now");
-        if (_status == 0) {
+    function cancelTaskByOwner(uint taskId) public isTaskCompleted(taskId) returns (bool) {
+        TaskStatus _status = tasks[taskId].status;
+        if (_status == TaskStatus.TODO) {
             require(address(this).balance >= tasks[taskId].commissionFee);
             _owner.transfer(tasks[taskId].commissionFee);
-        } else {
-            require(address(this).balance >= (tasks[taskId].commissionFee)*0.5);
+        } else if (_status == TaskStatus.ONGOING) {
+            require(address(this).balance >= (tasks[taskId].commissionFee)/2);
             _owner.transfer(tasks[taskId].commissionFee / 2);
         }
         return true;
@@ -117,15 +123,21 @@ contract TaskPool {
     /**
     Apply task by freelancer
      */
-    function applyTask(uint taskId) public {
-
+    function applyTask(uint taskId) public beforeAssignTaskTaker(taskId, msg.sender) {
+        Task storage task = tasks[taskId];
+        for (uint i = 0; i < task.applier.length; i++) {
+            if (task.applier[i] == msg.sender) {
+                delete task.applier[i];
+                break;
+            }
+        }
     }
-
     /**
     Cancel the task application by the freelancer
      */
-    function cancelApplication(uint taskId) public returns (bool) {
-
+    function cancelApplication(uint taskId) public beforeAssignTaskTaker(taskId, msg.sender) returns (bool) {
+        Task storage task = tasks[taskId];
+        task.applier.push(msg.sender);
     }
 
     /**
