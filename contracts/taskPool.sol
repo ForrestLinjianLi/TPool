@@ -10,7 +10,7 @@ contract TaskPool {
     uint public minimalDonateAmount = 1 ether;
 
     uint256 counter;
-
+    uint constant panelty = 1;
     constructor() payable{
         _owner = msg.sender;
         counter = 1;
@@ -39,11 +39,11 @@ contract TaskPool {
         uint[] appliedTasks;
     }
 
+
     // The task taker for each task
     mapping (address => Freelancer) public freelancers;
     mapping (uint => Task) public tasks;
 
-    uint taskCount;
     event createdTask(address _from);
     event cancel(address _from);
 
@@ -119,7 +119,7 @@ contract TaskPool {
     /**
     Confirm the task takers of all the tasks based on the freelancers' credits
      */
-    function confirmTaskTakers() public returns (bool) isOwner(){
+    function confirmTaskTakers() public returns (bool) {
         
     }
 
@@ -127,10 +127,21 @@ contract TaskPool {
 
     // }
 
+    function newFreelancer(uint taskId, address freelancer) internal {
+        Freelancer storage f = freelancers[freelancer];
+        f.isExistedUser = true;
+        f.appliedTasks.push(taskId);
+        f.credit = 100;
+        f.isOccupying = false;
+    }
+
     /**
     Apply task by freelancer
      */
     function applyTask(uint taskId) public beforeAssignTaskTaker(taskId, msg.sender) {
+        if (!freelancers[msg.sender].isExistedUser) {
+            newFreelancer(taskId, msg.sender);
+        }
         Task storage task = tasks[taskId];
         task.applier.push(msg.sender);
     }
@@ -145,14 +156,16 @@ contract TaskPool {
                 break;
             }
         }
+
     }
 
     /**
     Cancel the ongoing task by the freelancer, and the freelancer shall not recieve any 
     commision fee, and gain panelty on credits.
      */
-    function cancelOngoingTaskByFreelancer(uint taskId) public {
-
+    function cancelOngoingTaskByFreelancer(uint taskId) public  {
+        require(tasks[taskId].status == TaskStatus.ONGOING, "The task status should be ongoing.");
+        freelancers[msg.sender].
     }
 
     function balanceOfContract() public view returns (uint256) {
