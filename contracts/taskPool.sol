@@ -76,14 +76,14 @@ contract TaskPool {
     If the task is in status of ongoing, the owner shall be deducted half of the commision fee
     */
     function cancelTaskByOwner(uint taskId) public returns (bool) {
-        const _status = tasks[taskId].status;
+        uint _status = tasks[taskId].status;
         require(_status != 2, "The task has been completed, you cannot cancel it now");
         if (_status == 0) {
             require(address(this).balance >= tasks[taskId].commissionFee);
             _owner.transfer(tasks[taskId].commissionFee);
         } else {
-            require(address(this).balance >= (tasks[taskId].commissionFee)*0.5);
-            _owner.transfer(tasks[taskId].commissionFee * 0.5);
+            require(address(this).balance >= (tasks[taskId].commissionFee) / 2);
+            _owner.transfer(tasks[taskId].commissionFee / 2);
         }
         return true;
     }
