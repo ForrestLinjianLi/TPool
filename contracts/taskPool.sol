@@ -53,9 +53,19 @@ contract TaskPool {
     }
 
     modifier isTaskCompleted(uint taskId) {
-        require(tasks[taskId].status >= TaskStatus.FINISHED, "Task is in progress!");
+        require(tasks[taskId].status >= TaskStatus.FINISHED, "Task is done!");
         _;
     }
+
+    modifier isTaskActive(uint taskId) {
+        require(tasks[taskId].status = TaskStatus.TODO tasks[taskId].status = TaskStatus.ONGOING|| , "Task is not active!");
+        _;
+    }
+
+    modifier isValidTaskID(uint taskId){
+        require(taskId < counter && taskId > 0, "Invalid Task ID");
+    }
+    
 
     modifier beforeAssignTaskTaker(uint taskId, address flId) {
         require(tasks[taskId].status <= TaskStatus.ONGOING, "Task is already taken!");
@@ -65,16 +75,17 @@ contract TaskPool {
     }
 
     /**
-    create the task by the owner
+    Create the task by the owner.
      */
-    function createTask(uint256 price, string calldata content) public isOwner returns(bool){
+    function createTask(uint256 price, string calldata content) public payable isOwner returns(bool){
+        require(msg.value >= price, "Insufficient value.");
+
         tasks[counter].taskId = counter;
         tasks[counter].taker = address(0);
         tasks[counter].description = content;
         tasks[counter].commissionFee = price;
         tasks[counter].status = TaskStatus.TODO;
         counter+=1;
-        
         return true;
     }
 
@@ -82,10 +93,9 @@ contract TaskPool {
     cancel the task by the owner, the task is allowed to be canceled when it is uncompleted.
     If the task is in status of ongoing, the owner shall be deducted half of the commision fee
     */
-    function cancelTaskByOwner(uint taskId) public isTaskCompleted(taskId) returns (bool) {
-        require(taskId < counter && taskId > 0, "Invalid Task ID");
+    function cancelTaskByOwner(uint taskId) public isTaskActive(taskId) isValidTaskID(taskId) returns (bool) {
+        
         TaskStatus _status = tasks[taskId].status;
-        require(_status == TaskStatus.TODO || _status == TaskStatus.ONGOING, "The task has been closed or finished, you cannot cancel it now");
         
         if (_status == TaskStatus.TODO) {
             require(address(this).balance >= tasks[taskId].commissionFee);
@@ -94,7 +104,7 @@ contract TaskPool {
             require(address(this).balance >= (tasks[taskId].commissionFee)/2);
             _owner.transfer(tasks[taskId].commissionFee / 2);
         }
-        _status = TaskStatus.CLOSED;
+        tasks[taskId].status = TaskStatus.CLOSED;
         
         return true;
     }
@@ -119,7 +129,8 @@ contract TaskPool {
     /**
     Confirm the task takers of all the tasks based on the freelancers' credits
      */
-    function confirmTaskTakers() public returns (bool) isOwner(){
+    function confirmTaskTakers() public isOwner returns (bool){
+        
         
     }
 
