@@ -73,6 +73,7 @@ contract TaskPool {
         tasks[counter].description = content;
         tasks[counter].commissionFee = price;
         tasks[counter].status = TaskStatus.TODO;
+        counter+=1;
         return true;
     }
 
@@ -81,6 +82,7 @@ contract TaskPool {
     If the task is in status of ongoing, the owner shall be deducted half of the commision fee
     */
     function cancelTaskByOwner(uint taskId) public isTaskCompleted(taskId) returns (bool) {
+        require(taskId < counter && taskId > 0, "Invalid Task ID");
         TaskStatus _status = tasks[taskId].status;
         if (_status == TaskStatus.TODO) {
             require(address(this).balance >= tasks[taskId].commissionFee);
