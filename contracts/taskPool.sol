@@ -12,7 +12,6 @@ contract TaskPool {
     uint256 counter;
     uint256 activeTaskCounter; // The counter of active tasks (todoTask and ongoingTask).
 
-    uint constant panelty = 1;
     constructor() payable{
         _owner = msg.sender;
         counter = 1;
@@ -41,11 +40,11 @@ contract TaskPool {
         uint[] appliedTasks;
     }
 
-
     // The task taker for each task
     mapping (address => Freelancer) public freelancers;
     mapping (uint => Task) public tasks;
 
+    uint taskCount;
     event createdTask(address _from);
     event cancel(address _from);
 
@@ -55,9 +54,20 @@ contract TaskPool {
     }
 
     modifier isTaskCompleted(uint taskId) {
-        require(tasks[taskId].status >= TaskStatus.FINISHED, "Task is in progress!");
+        require(tasks[taskId].status >= TaskStatus.FINISHED, "Task is done!");
         _;
     }
+
+    modifier isTaskActive(uint taskId) {
+        require(tasks[taskId].status == TaskStatus.TODO || tasks[taskId].status == TaskStatus.ONGOING , "Task is not active!");
+        _;
+    }
+
+    modifier isValidTaskID(uint taskId){
+        require(taskId <= counter && taskId > 0, "Invalid Task ID");
+        _;
+    }
+    
 
     modifier beforeAssignTaskTaker(uint taskId, address flId) {
         require(tasks[taskId].status <= TaskStatus.ONGOING, "Task is already taken!");
@@ -67,9 +77,15 @@ contract TaskPool {
     }
 
     /**
-    create the task by the owner
+    Create the task by the owner.
      */
+<<<<<<< HEAD
     function createTask(uint256 price, string calldata content) public payable isOwner {
+=======
+    function createTask(uint256 price, string calldata content) public payable isOwner{
+        require(msg.value >= price, "Insufficient value.");
+
+>>>>>>> parent of cc4e41c (Merge branch 'main' of https://github.com/ForrestLinjianLi/TPool into main)
         tasks[counter].taskId = counter;
         tasks[counter].taker = address(0);
         tasks[counter].description = content;
@@ -83,10 +99,14 @@ contract TaskPool {
     cancel the task by the owner, the task is allowed to be canceled when it is uncompleted.
     If the task is in status of ongoing, the owner shall be deducted half of the commision fee
     */
+<<<<<<< HEAD
     function cancelTaskByOwner(uint taskId) public isTaskCompleted(taskId) {
         require(taskId < counter && taskId > 0, "Invalid Task ID");
+=======
+    function cancelTaskByOwner(uint taskId) public isTaskActive(taskId) isValidTaskID(taskId){
+        
+>>>>>>> parent of cc4e41c (Merge branch 'main' of https://github.com/ForrestLinjianLi/TPool into main)
         TaskStatus _status = tasks[taskId].status;
-        require(_status == TaskStatus.TODO || _status == TaskStatus.ONGOING, "The task has been closed or finished, you cannot cancel it now");
         
         if (_status == TaskStatus.TODO) {
             require(address(this).balance >= tasks[taskId].commissionFee);
@@ -150,6 +170,7 @@ contract TaskPool {
         
     }
 
+<<<<<<< HEAD
     function newFreelancer(uint taskId, address freelancer) internal {
         Freelancer storage f = freelancers[freelancer];
         f.isExistedUser = true;
@@ -157,21 +178,27 @@ contract TaskPool {
         f.credit = 100;
         f.isOccupying = false;
     }
+=======
+    // function getBalance() public returns (uint256) {
+
+    // }
+>>>>>>> parent of cc4e41c (Merge branch 'main' of https://github.com/ForrestLinjianLi/TPool into main)
 
     /**
     Apply task by freelancer
      */
     function applyTask(uint taskId) public beforeAssignTaskTaker(taskId, msg.sender) {
-        if (!freelancers[msg.sender].isExistedUser) {
-            newFreelancer(taskId, msg.sender);
-        }
         Task storage task = tasks[taskId];
         task.applier.push(msg.sender);
     }
     /**
     Cancel the task application by the freelancer
      */
+<<<<<<< HEAD
     function cancelApplication(uint taskId) public beforeAssignTaskTaker(taskId, msg.sender) {
+=======
+    function cancelApplication(uint taskId) public beforeAssignTaskTaker(taskId, msg.sender){
+>>>>>>> parent of cc4e41c (Merge branch 'main' of https://github.com/ForrestLinjianLi/TPool into main)
         Task storage task = tasks[taskId];
         for (uint i = 0; i < task.applier.length; i++) {
             if (task.applier[i] == msg.sender) {
@@ -186,6 +213,7 @@ contract TaskPool {
     commision fee, and gain panelty on credits.
      */
     function cancelOngoingTaskByFreelancer(uint taskId) public {
+<<<<<<< HEAD
         require(tasks[taskId].status == TaskStatus.ONGOING, "The task status should be ongoing.");
         Freelancer storage freelancer = freelancers[msg.sender];
         require(freelancer.currentTaskId == taskId, "The current task that this freelance is taking does not match this task.");
@@ -193,6 +221,9 @@ contract TaskPool {
         freelancer.isOccupying = false;
         freelancer.credit -= panelty;
         tasks[taskId].status = TaskStatus.CLOSED;
+=======
+
+>>>>>>> parent of cc4e41c (Merge branch 'main' of https://github.com/ForrestLinjianLi/TPool into main)
     }
 
     function balanceOfContract() public view returns (uint256) {
