@@ -12,6 +12,7 @@ contract TaskPool {
     uint256 counter;
     uint256 activeTaskCounter; // The counter of active tasks (todoTask and ongoingTask).
 
+    uint constant panelty = 1;
     constructor() payable{
         _owner = msg.sender;
         counter = 1;
@@ -40,11 +41,11 @@ contract TaskPool {
         uint[] appliedTasks;
     }
 
+
     // The task taker for each task
     mapping (address => Freelancer) public freelancers;
     mapping (uint => Task) public tasks;
 
-    uint taskCount;
     event createdTask(address _from);
     event cancel(address _from);
 
@@ -54,20 +55,9 @@ contract TaskPool {
     }
 
     modifier isTaskCompleted(uint taskId) {
-        require(tasks[taskId].status >= TaskStatus.FINISHED, "Task is done!");
+        require(tasks[taskId].status >= TaskStatus.FINISHED, "Task is in progress!");
         _;
     }
-
-    modifier isTaskActive(uint taskId) {
-        require(tasks[taskId].status == TaskStatus.TODO || tasks[taskId].status == TaskStatus.ONGOING , "Task is not active!");
-        _;
-    }
-
-    modifier isValidTaskID(uint taskId){
-        require(taskId <= counter && taskId > 0, "Invalid Task ID");
-        _;
-    }
-    
 
     modifier beforeAssignTaskTaker(uint taskId, address flId) {
         require(tasks[taskId].status <= TaskStatus.ONGOING, "Task is already taken!");
@@ -77,11 +67,9 @@ contract TaskPool {
     }
 
     /**
-    Create the task by the owner.
+    create the task by the owner
      */
-    function createTask(uint256 price, string calldata content) public payable isOwner{
-        require(msg.value >= price, "Insufficient value.");
-
+    function createTask(uint256 price, string calldata content) public isOwner returns(bool){
         tasks[counter].taskId = counter;
         tasks[counter].taker = address(0);
         tasks[counter].description = content;
@@ -95,9 +83,10 @@ contract TaskPool {
     cancel the task by the owner, the task is allowed to be canceled when it is uncompleted.
     If the task is in status of ongoing, the owner shall be deducted half of the commision fee
     */
-    function cancelTaskByOwner(uint taskId) public isTaskActive(taskId) isValidTaskID(taskId){
-        
+    function cancelTaskByOwner(uint taskId) public isTaskCompleted(taskId) returns (bool) {
+        require(taskId < counter && taskId > 0, "Invalid Task ID");
         TaskStatus _status = tasks[taskId].status;
+        require(_status == TaskStatus.TODO || _status == TaskStatus.ONGOING, "The task has been closed or finished, you cannot cancel it now");
         
         if (_status == TaskStatus.TODO) {
             require(address(this).balance >= tasks[taskId].commissionFee);
@@ -179,17 +168,28 @@ contract TaskPool {
 
     // }
 
+    function newFreelancer(uint taskId, address freelancer) internal {
+        Freelancer storage f = freelancers[freelancer];
+        f.isExistedUser = true;
+        f.appliedTasks.push(taskId);
+        f.credit = 100;
+        f.isOccupying = false;
+    }
+
     /**
     Apply task by freelancer
      */
     function applyTask(uint taskId) public beforeAssignTaskTaker(taskId, msg.sender) {
+        if (!freelancers[msg.sender].isExistedUser) {
+            newFreelancer(taskId, msg.sender);
+        }
         Task storage task = tasks[taskId];
         task.applier.push(msg.sender);
     }
     /**
     Cancel the task application by the freelancer
      */
-    function cancelApplication(uint taskId) public beforeAssignTaskTaker(taskId, msg.sender){
+    function cancelApplication(uint taskId) public beforeAssignTaskTaker(taskId, msg.sender) returns (bool) {
         Task storage task = tasks[taskId];
         for (uint i = 0; i < task.applier.length; i++) {
             if (task.applier[i] == msg.sender) {
@@ -197,6 +197,7 @@ contract TaskPool {
                 break;
             }
         }
+
     }
 
     /**
@@ -204,7 +205,12 @@ contract TaskPool {
     commision fee, and gain panelty on credits.
      */
     function cancelOngoingTaskByFreelancer(uint taskId) public {
-
+        require(tasks[taskId].status == TaskStatus.ONGOING, "The task status should be ongoing.");
+        uint[] storage freelancer = freelancers[msg.sender];
+        require(freelancer.currentTaskId == taskId, "The current task that this freelance is taking does not match this task.");
+        freelancer.currentTaskId = 0;
+        tasks[taskId].isOccupying = false;
+        tasks[taskId].status = Task.CLOSED;
     }
 
     function balanceOfContract() public view returns (uint256) {
