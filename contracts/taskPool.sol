@@ -98,23 +98,6 @@ contract TaskPool {
         tasks[taskId].status = TaskStatus.CLOSED;
         activeTaskCounter-=1;
     }
-    
-    // function getOngoingTasks() public returns (Task[] memory) {
-
-    // }
-
-    // function getCompletedTasks() public returns (Task[] memory) {
-
-    // }
-
-    // function getAllTasks() public returns (Task[] memory) {
-
-    // }
-
-
-    // function getTodoTasks() public returns (Task[] memory) {
-
-    // }
 
     /**
     Confirm the task takers of all the tasks based on the freelancers' credits
@@ -163,10 +146,6 @@ contract TaskPool {
         
         
     }
-
-    // function getBalance() public returns (uint256) {
-
-    // }
 
     function newFreelancer(uint taskId, address freelancer) internal {
         Freelancer storage f = freelancers[freelancer];
@@ -217,6 +196,23 @@ contract TaskPool {
         return address(this).balance;
     }
 
+    // function getOngoingTasks() public returns (Task[] memory) {
 
+    // }
 
+    // function getCompletedTasks() public returns (Task[] memory) {
+
+    // }
+
+    // function getAllTasks() public returns (Task[] memory) {
+
+    // }
+
+    // function getTodoTasks() public returns (Task[] memory) {
+
+    // }
+
+    // function getBalance() public returns (uint256) {
+
+    // }
 }
