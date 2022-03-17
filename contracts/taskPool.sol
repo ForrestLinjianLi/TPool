@@ -11,6 +11,7 @@ contract TaskPool {
 
     uint256 counter;
     uint256 activeTaskCounter; // The counter of active tasks (todoTask and ongoingTask).
+    uint256 constant panelty = 1;
 
     constructor() payable{
         _owner = msg.sender;
@@ -76,7 +77,7 @@ contract TaskPool {
     modifier beforeAssignTaskTaker(uint taskId, address flId) {
         require(tasks[taskId].status <= TaskStatus.ONGOING, "Task is already taken!");
         require(tasks[taskId].status != TaskStatus.NONE, "Task does not exist!");
-        require(freelancers[flId].isOccupying, "The task taker has another ongoing task, each task taker can only have one task");
+        require(!freelancers[flId].isOccupying, "The task taker has another ongoing task, each task taker can only have one task");
         _;
     }
 
@@ -175,6 +176,9 @@ contract TaskPool {
     Apply task by freelancer
      */
     function applyTask(uint taskId) public beforeAssignTaskTaker(taskId, msg.sender) {
+        if (!freelancers[msg.sender].isExistedUser) {
+            newFreelancer(taskId, msg.sender);
+        }
         Task storage task = tasks[taskId];
         task.applier.push(msg.sender);
     }
