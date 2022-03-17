@@ -67,13 +67,11 @@ contract TaskPool {
         require(taskId <= counter && taskId > 0, "Invalid Task ID");
         _;
     }
-    
 
-    modifier isValidTaskID(uint taskId){
-        require(taskId <= counter && taskId > 0, "Invalid Task ID");
+    modifier isSufficientBalance(uint price){
+        require(msg.value >= price, "The balance is insufficient!");
         _;
     }
-    
 
     modifier beforeAssignTaskTaker(uint taskId, address flId) {
         require(tasks[taskId].status <= TaskStatus.ONGOING, "Task is already taken!");
@@ -85,7 +83,7 @@ contract TaskPool {
     /**
     Create the task by the owner.
      */
-    function createTask(uint256 price, string calldata content) public payable isOwner {
+    function createTask(uint256 price, string calldata content) public payable isOwner isSufficientBalance(price)  {
         tasks[counter].taskId = counter;
         tasks[counter].taker = address(0);
         tasks[counter].description = content;
