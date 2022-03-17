@@ -69,7 +69,7 @@ contract TaskPool {
     /**
     create the task by the owner
      */
-    function createTask(uint256 price, string calldata content) public isOwner returns(bool){
+    function createTask(uint256 price, string calldata content) public isOwner{
         tasks[counter].taskId = counter;
         tasks[counter].taker = address(0);
         tasks[counter].description = content;
@@ -112,7 +112,7 @@ contract TaskPool {
             if(_status == TaskStatus.TODO){
                 address[] storage curApplier = tasks[i].applier;
                 if(curApplier.length > 0){
-                    uint highestCreditSoFar = -1;
+                    uint highestCreditSoFar = 0;
                     address bestApplier = address(0);
                     // Looking for the best applier with the highest credit to be the task taker.
                     for(uint j=0; j<curApplier.length; j++){
