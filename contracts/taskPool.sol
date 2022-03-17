@@ -69,6 +69,12 @@ contract TaskPool {
     }
     
 
+    modifier isValidTaskID(uint taskId){
+        require(taskId <= counter && taskId > 0, "Invalid Task ID");
+        _;
+    }
+    
+
     modifier beforeAssignTaskTaker(uint taskId, address flId) {
         require(tasks[taskId].status <= TaskStatus.ONGOING, "Task is already taken!");
         require(tasks[taskId].status != TaskStatus.NONE, "Task does not exist!");
@@ -93,8 +99,8 @@ contract TaskPool {
     cancel the task by the owner, the task is allowed to be canceled when it is uncompleted.
     If the task is in status of ongoing, the owner shall be deducted half of the commision fee
     */
-    function cancelTaskByOwner(uint taskId) public isTaskCompleted(taskId) {
-        require(taskId < counter && taskId > 0, "Invalid Task ID");
+    function cancelTaskByOwner(uint taskId) public isTaskActive(taskId) isValidTaskID(taskId){
+        
         TaskStatus _status = tasks[taskId].status;
         
         if (_status == TaskStatus.TODO) {
