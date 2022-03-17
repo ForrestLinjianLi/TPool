@@ -10,6 +10,7 @@ contract TaskPool {
     uint public minimalDonateAmount = 1 ether;
 
     uint256 counter;
+    uint256 activeTaskCounter; // The counter of active tasks (todoTask and ongoingTask).
 
     constructor() payable{
         _owner = msg.sender;
@@ -87,6 +88,7 @@ contract TaskPool {
         tasks[counter].commissionFee = price;
         tasks[counter].status = TaskStatus.TODO;
         counter+=1;
+        activeTaskCounter+=1;
     }
 
     /**
@@ -105,6 +107,7 @@ contract TaskPool {
             _owner.transfer(tasks[taskId].commissionFee / 2);
         }
         tasks[taskId].status = TaskStatus.CLOSED;
+        activeTaskCounter-=1;
     }
     
     // function getOngoingTasks() public returns (Task[] memory) {
@@ -127,7 +130,47 @@ contract TaskPool {
     /**
     Confirm the task takers of all the tasks based on the freelancers' credits
      */
-    function confirmTaskTakers() public isOwner returns (bool){
+    function confirmTaskTakers() public isOwner {
+        
+        // Note that task ID starts from 1.
+        for(uint i=1; i<=counter; i++){
+            TaskStatus _status = tasks[i].status;
+
+            // Only confirm takers when the task status is "to do".
+            if(_status == TaskStatus.TODO){
+                address[] storage curApplier = tasks[i].applier;
+                if(curApplier.length > 0){
+                    uint highestCreditSoFar = -1;
+                    address bestApplier = address(0);
+                    // Looking for the best applier with the highest credit to be the task taker.
+                    for(uint j=0; j<curApplier.length; j++){
+                        // Only when the applier is not occupied:
+                        if(!curApplier[j].isOccupying && curApplier[j].credit > highestCreditSoFar){
+                            highestCreditSoFar = curApplier[j].credit;
+                            bestApplier = curApplier[j];
+                        }
+                        // Remove the tasks[i] from the all the appliers' applied tasks.
+                        uint[] storage curApplierTasks = freelancers[curApplier[j]].appliedTasks;
+                        for (uint k = 0; k < curApplierTasks.length;k++) {
+                            if(curApplierTasks[k] == tasks[i].taskId) {
+                                delete curApplierTasks[k];
+                                break;
+                            }
+                        }
+                    }
+
+                    //Update the task's attributes.
+                    //TODO: Handling due date.
+                    tasks[i].taker = bestApplier;
+                    tasks[i].status = TaskStatus.ONGOING;
+        
+                    // Update the taker's attributes.
+                    freelancers[bestApplier].isOccupying = true;
+                    freelancers[bestApplier].currentTaskId = i;
+                    freelancers[bestApplier].history.push = tasks[i];
+                }
+            }
+        }
         
         
     }
