@@ -84,11 +84,7 @@ contract TaskPool {
     /**
     Create the task by the owner.
      */
-<<<<<<< HEAD
-    function createTask(uint256 price, string calldata content) public isOwner{
-=======
     function createTask(uint256 price, string calldata content) public payable isOwner isSufficientBalance(price)  {
->>>>>>> e1674c819ada45a3d7845ec74bd5dcd748e517c8
         tasks[counter].taskId = counter;
         tasks[counter].taker = address(0);
         tasks[counter].description = content;
