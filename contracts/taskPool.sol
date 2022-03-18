@@ -54,7 +54,7 @@ contract TaskPool {
         _;
     }
 
-    modifier isTaskCompleted(uint taskId) {
+    modifier isTaskNotCompleted(uint taskId) {
         require(tasks[taskId].status >= TaskStatus.FINISHED, "Task is done!");
         _;
     }
@@ -92,6 +92,8 @@ contract TaskPool {
         tasks[counter].status = TaskStatus.TODO;
         counter+=1;
         activeTaskCounter+=1;
+        _owner.transfer(price);
+        msg.sender.transfer(msg.value - price);
     }
 
     /**
@@ -208,7 +210,27 @@ contract TaskPool {
         tasks[taskId].status = TaskStatus.CLOSED;
     }
 
+    function finishTask(uint taskId) external isValidTaskID(taskId) isTaskNotCompleted(taskId) {
+        require(taskId == freelancers[msg.sender].currentTaskId, "This task is taken by someone else.");
+        tasks[taskId].status = TaskStatus.FINISHED;
+    }
+
+    function confirmFinishedTask(uint taskId) payable external isOwner isValidTaskID(taskId) isTaskNotCompleted(taskId){
+        Task storage task = tasks[taskId];
+        task.status = TaskStatus.CLOSED;
+        Freelancer storage freelancer = freelancers[task.taker];
+        freelancer.isOccupying = false;
+        freelancer.currentTaskId = 0;
+        payable(task.taker).transfer(task.commissionFee);
+    }
+
     function balanceOfContract() external view returns (uint256) {
         return address(this).balance;
     }
+
+    // Function to receive Ether. msg.data must be empty
+    receive() external payable {}
+
+    // Fallback function is called when msg.data is not empty
+    fallback() external payable {}
 }
