@@ -94,7 +94,9 @@ describe("Apply Task", function () {
     let task = await taskPool.tasks(1);
     await expect(task.taskId).to.equal(1);
     await expect(taskPool.connect(signer1).applyTask(1)).to.be.not.reverted;
-    await expect(await taskPool.freelancers(await signer1.getAddress()).credit).to.equal(100);
+    let addr = await signer1.getAddress();
+    let fl = await taskPool.freelancers(addr);
+    await expect(fl.credit).to.equal(100);
   });
 });
 // TODO
