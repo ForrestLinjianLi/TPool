@@ -12,6 +12,7 @@ contract TaskPool {
     uint256 counter;
     uint256 activeTaskCounter; // The counter of active tasks (todoTask and ongoingTask).
     uint256 constant panelty = 1;
+    uint256 reward = 1;
 
     constructor() payable{
         _owner = msg.sender;
@@ -230,6 +231,8 @@ contract TaskPool {
         Freelancer storage freelancer = freelancers[task.taker];
         freelancer.isOccupying = false;
         freelancer.currentTaskId = 0;
+        // reward the freelancer with commission fee and credit score
+        freelancer.credit += reward;
         payable(task.taker).transfer(task.commissionFee);
     }
 
