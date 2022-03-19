@@ -98,6 +98,26 @@ describe("Apply Task", function () {
     let fl = await taskPool.freelancers(addr);
     await expect(fl.credit).to.equal(100);
   });
+
+  it("check for the number of applied task for freelancer.", async function() {
+    await expect(taskPool.createTask(5, "Test Task", {from: owner.address, value:ethers.utils.parseEther("100.0")}))
+    .to.be.not.reverted;
+    await expect(taskPool.createTask(10, "Test Task 2", {from: owner.address, value:ethers.utils.parseEther("50.0")}))
+    .to.be.not.reverted;
+    let task = await taskPool.tasks(1);
+    await expect(task.taskId).to.equal(1);
+    task = await taskPool.tasks(2);
+    await expect(task.taskId).to.equal(2);
+    await expect(taskPool.connect(signer1).applyTask(1)).to.be.not.reverted;
+    let addr = await signer1.getAddress();
+    let fl = await taskPool.freelancers(addr);
+    await expect(fl.credit).to.equal(100);
+    let appliedTasks = await taskPool.getAppliedTaskFreelancer(addr);
+    expect(appliedTasks.length).to.equal(1);
+    await expect(taskPool.connect(signer1).applyTask(2)).to.be.not.reverted;
+    appliedTasks = await taskPool.getAppliedTaskFreelancer(addr);
+    expect(appliedTasks.length).to.equal(2);
+  });
 });
 
 

@@ -164,11 +164,13 @@ contract TaskPool {
         
         
     }
-
+    /**
+    taskId is unused, need to delete. Ask Manager Li for permission!!
+     */
     function newFreelancer(uint taskId, address freelancer) internal {
         Freelancer storage f = freelancers[freelancer];
         f.isExistedUser = true;
-        f.appliedTasks.push(taskId);
+        // f.appliedTasks.push(taskId);
         f.credit = 100;
         f.isOccupying = false;
     }
@@ -180,6 +182,9 @@ contract TaskPool {
         if (!freelancers[msg.sender].isExistedUser) {
             newFreelancer(taskId, msg.sender);
         }
+        // Push the task here
+        Freelancer storage f = freelancers[msg.sender];
+        f.appliedTasks.push(taskId);
         Task storage task = tasks[taskId];
         task.applier.push(msg.sender);
     }
@@ -224,8 +229,24 @@ contract TaskPool {
         payable(task.taker).transfer(task.commissionFee);
     }
 
+    // Return the balance of this contract
     function balanceOfContract() external view returns (uint256) {
         return address(this).balance;
+    }
+
+    // Return the applied tasks of a particular freelancer
+    function getAppliedTaskFreelancer(address freelancer) public view returns(uint[] memory) {
+        return freelancers[freelancer].appliedTasks;
+    }
+
+    // Return the history of a particular freelancer
+    function getHistoryFreelancer(address freelancer) public view returns(uint[] memory) {
+        return freelancers[freelancer].history;
+    }
+
+    // Return the appliers of a particular task
+    function getApplierTasks(uint taskId) public view returns(address[] memory) {
+        return tasks[taskId].applier;
     }
 
     // Function to receive Ether. msg.data must be empty
