@@ -54,7 +54,7 @@ contract TaskPool {
         _;
     }
 
-    modifier isTaskCompleted(uint taskId) {
+    modifier isTaskNotCompleted(uint taskId) {
         require(tasks[taskId].status >= TaskStatus.FINISHED, "Task is done!");
         _;
     }
@@ -84,7 +84,7 @@ contract TaskPool {
     /**
     Create the task by the owner.
      */
-    function createTask(uint256 price, string calldata content) public payable isOwner isSufficientBalance(price)  {
+    function createTask(uint256 price, string calldata content) external payable isOwner isSufficientBalance(price)  {
         tasks[counter].taskId = counter;
         tasks[counter].taker = address(0);
         tasks[counter].description = content;
@@ -92,13 +92,15 @@ contract TaskPool {
         tasks[counter].status = TaskStatus.TODO;
         counter+=1;
         activeTaskCounter+=1;
+        _owner.transfer(price);
+        msg.sender.transfer(msg.value - price);
     }
 
     /**
     cancel the task by the owner, the task is allowed to be canceled when it is uncompleted.
     If the task is in status of ongoing, the owner shall be deducted half of the commision fee
     */
-    function cancelTaskByOwner(uint taskId) public isTaskActive(taskId) isValidTaskID(taskId){
+    function cancelTaskByOwner(uint taskId) external isTaskActive(taskId) isValidTaskID(taskId){
         
         TaskStatus _status = tasks[taskId].status;
         
@@ -116,8 +118,7 @@ contract TaskPool {
     /**
     Confirm the task takers of all the tasks based on the freelancers' credits
      */
-    function confirmTaskTakers() public isOwner {
-        
+    function confirmTaskTakers() external isOwner {
         // Note that task ID starts from 1.
         for(uint i=1; i<=counter; i++){
             TaskStatus _status = tasks[i].status;
@@ -175,7 +176,7 @@ contract TaskPool {
     /**
     Apply task by freelancer
      */
-    function applyTask(uint taskId) public beforeAssignTaskTaker(taskId, msg.sender) {
+    function applyTask(uint taskId) external beforeAssignTaskTaker(taskId, msg.sender) {
         if (!freelancers[msg.sender].isExistedUser) {
             newFreelancer(taskId, msg.sender);
         }
@@ -185,7 +186,7 @@ contract TaskPool {
     /**
     Cancel the task application by the freelancer
      */
-    function cancelApplication(uint taskId) public beforeAssignTaskTaker(taskId, msg.sender) {
+    function cancelApplication(uint taskId) external beforeAssignTaskTaker(taskId, msg.sender) {
         Task storage task = tasks[taskId];
         for (uint i = 0; i < task.applier.length; i++) {
             if (task.applier[i] == msg.sender) {
@@ -199,7 +200,7 @@ contract TaskPool {
     Cancel the ongoing task by the freelancer, and the freelancer shall not recieve any 
     commision fee, and gain panelty on credits.
      */
-    function cancelOngoingTaskByFreelancer(uint taskId) public {
+    function cancelOngoingTaskByFreelancer(uint taskId) external {
         require(tasks[taskId].status == TaskStatus.ONGOING, "The task status should be ongoing.");
         Freelancer storage freelancer = freelancers[msg.sender];
         require(freelancer.currentTaskId == taskId, "The current task that this freelance is taking does not match this task.");
@@ -209,27 +210,27 @@ contract TaskPool {
         tasks[taskId].status = TaskStatus.CLOSED;
     }
 
-    function balanceOfContract() public view returns (uint256) {
+    function finishTask(uint taskId) external isValidTaskID(taskId) isTaskNotCompleted(taskId) {
+        require(taskId == freelancers[msg.sender].currentTaskId, "This task is taken by someone else.");
+        tasks[taskId].status = TaskStatus.FINISHED;
+    }
+
+    function confirmFinishedTask(uint taskId) payable external isOwner isValidTaskID(taskId) isTaskNotCompleted(taskId){
+        Task storage task = tasks[taskId];
+        task.status = TaskStatus.CLOSED;
+        Freelancer storage freelancer = freelancers[task.taker];
+        freelancer.isOccupying = false;
+        freelancer.currentTaskId = 0;
+        payable(task.taker).transfer(task.commissionFee);
+    }
+
+    function balanceOfContract() external view returns (uint256) {
         return address(this).balance;
     }
 
-    // function getOngoingTasks() public returns (Task[] memory) {
+    // Function to receive Ether. msg.data must be empty
+    receive() external payable {}
 
-    // }
-
-    // function getCompletedTasks() public returns (Task[] memory) {
-
-    // }
-
-    // function getAllTasks() public returns (Task[] memory) {
-
-    // }
-
-    // function getTodoTasks() public returns (Task[] memory) {
-
-    // }
-
-    // function getBalance() public returns (uint256) {
-
-    // }
+    // Fallback function is called when msg.data is not empty
+    fallback() external payable {}
 }
