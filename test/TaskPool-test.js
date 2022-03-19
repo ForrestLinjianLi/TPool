@@ -97,6 +97,8 @@ describe("Apply Task", function () {
     await expect(await taskPool.freelancers(await signer1.getAddress()).credit).to.equal(100);
   });
 });
+
+
 // TODO
 describe("Cancel Application", function () {
   it("Should be reverted when the task is not active i.e the task is in status of NONE or CLOSED.", async function() {
