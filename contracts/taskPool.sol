@@ -54,8 +54,13 @@ contract TaskPool {
         _;
     }
 
-    modifier isTaskNotCompleted(uint taskId) {
-        require(tasks[taskId].status >= TaskStatus.FINISHED, "Task is done!");
+    modifier isTaskOnGoing(uint taskId) {
+        require(tasks[taskId].status == TaskStatus.ONGOING, "Task has to be Ongoing!");
+        _;
+    }
+
+    modifier isTaskFinished(uint taskId) {
+        require(tasks[taskId].status == TaskStatus.FINISHED, "Task has to be finished first!");
         _;
     }
 
@@ -92,7 +97,6 @@ contract TaskPool {
         tasks[counter].status = TaskStatus.TODO;
         counter+=1;
         activeTaskCounter+=1;
-        _owner.transfer(price);
         msg.sender.transfer(msg.value - price);
     }
 
@@ -167,7 +171,7 @@ contract TaskPool {
     /**
     taskId is unused, need to delete. Ask Manager Li for permission!!
      */
-    function newFreelancer(uint taskId, address freelancer) internal {
+    function newFreelancer(address freelancer) internal {
         Freelancer storage f = freelancers[freelancer];
         f.isExistedUser = true;
         // f.appliedTasks.push(taskId);
@@ -180,7 +184,7 @@ contract TaskPool {
      */
     function applyTask(uint taskId) external beforeAssignTaskTaker(taskId, msg.sender) {
         if (!freelancers[msg.sender].isExistedUser) {
-            newFreelancer(taskId, msg.sender);
+            newFreelancer(msg.sender);
         }
         // Push the task here
         Freelancer storage f = freelancers[msg.sender];
@@ -215,12 +219,12 @@ contract TaskPool {
         tasks[taskId].status = TaskStatus.CLOSED;
     }
 
-    function finishTask(uint taskId) external isValidTaskID(taskId) isTaskNotCompleted(taskId) {
+    function finishTask(uint taskId) external isValidTaskID(taskId) isTaskOnGoing(taskId) {
         require(taskId == freelancers[msg.sender].currentTaskId, "This task is taken by someone else.");
         tasks[taskId].status = TaskStatus.FINISHED;
     }
 
-    function confirmFinishedTask(uint taskId) payable external isOwner isValidTaskID(taskId) isTaskNotCompleted(taskId){
+    function confirmFinishedTask(uint taskId) external isOwner isValidTaskID(taskId) isTaskFinished(taskId){
         Task storage task = tasks[taskId];
         task.status = TaskStatus.CLOSED;
         Freelancer storage freelancer = freelancers[task.taker];
