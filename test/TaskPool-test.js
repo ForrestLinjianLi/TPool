@@ -87,14 +87,17 @@ describe("Confirm Tasks", function () {
   });
 });
 
-//TODO:wyb
 describe("Apply Task", function () {
-  it("Should be reverted when the task is not active i.e the task is in status of NONE or CLOSED.", async function() {
-    await expect(taskPool.cancelTaskByOwner(0)).to.be.reverted;
-    await expect(taskPool.cancelTaskByOwner(1)).to.be.reverted;
+  it("The freelancer should have 100 credit scores, and should be able to apply.", async function() {
+    await expect(taskPool.createTask(5, "Test Task", {from: owner.address, value:ethers.utils.parseEther("100.0")}))
+    .to.be.not.reverted;
+    let task = await taskPool.tasks(1);
+    await expect(task.taskId).to.equal(1);
+    await expect(taskPool.connect(signer1).applyTask(1)).to.be.not.reverted;
+    await expect(await taskPool.freelancers(await signer1.getAddress()).credit).to.equal(100);
   });
 });
-
+// TODO
 describe("Cancel Application", function () {
   it("Should be reverted when the task is not active i.e the task is in status of NONE or CLOSED.", async function() {
     await expect(taskPool.cancelTaskByOwner(0)).to.be.reverted;
