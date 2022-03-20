@@ -55,6 +55,11 @@ contract TaskPool {
         _;
     }
 
+    modifier isNotOwner {
+        require(msg.sender != _owner, "Only owner can operate this!!!");
+        _;
+    }
+
     modifier isTaskOnGoing(uint taskId) {
         require(tasks[taskId].status == TaskStatus.ONGOING, "Task has to be Ongoing!");
         _;
@@ -183,15 +188,26 @@ contract TaskPool {
     /**
     Apply task by freelancer
      */
-    function applyTask(uint taskId) external beforeAssignTaskTaker(taskId, msg.sender) {
+    function applyTask(uint taskId) external isNotOwner beforeAssignTaskTaker(taskId, msg.sender) {
         if (!freelancers[msg.sender].isExistedUser) {
             newFreelancer(msg.sender);
         }
         // Push the task here
         Freelancer storage f = freelancers[msg.sender];
-        f.appliedTasks.push(taskId);
-        Task storage task = tasks[taskId];
-        task.applier.push(msg.sender);
+        
+        //Check if the f has applied for the same task already:
+        bool doesListContainElement = false;
+        for (uint i=0; i < f.appliedTasks.length; i++) {
+            if (taskId == f.appliedTasks[i]) {
+                doesListContainElement = true;
+            }
+        }
+
+        if(doesListContainElement){
+            f.appliedTasks.push(taskId);
+            Task storage task = tasks[taskId];
+            task.applier.push(msg.sender);
+        }
     }
     /**
     Cancel the task application by the freelancer
