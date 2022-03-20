@@ -56,7 +56,7 @@ contract TaskPool {
     }
 
     modifier isNotOwner {
-        require(msg.sender != _owner, "Only owner can operate this!!!");
+        require(msg.sender != _owner, "Only freelancer can operate this!!!");
         _;
     }
 
@@ -203,7 +203,7 @@ contract TaskPool {
             }
         }
 
-        if(doesListContainElement){
+        if(!doesListContainElement){
             f.appliedTasks.push(taskId);
             Task storage task = tasks[taskId];
             task.applier.push(msg.sender);
