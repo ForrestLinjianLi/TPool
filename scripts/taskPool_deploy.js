@@ -15,7 +15,7 @@ async function main() {
 
   // We get the contract to deploy
   const TaskPool = await hre.ethers.getContractFactory("TaskPool");
-  const taskPool = await TaskPool.deploy("The Task Pool has Launched now!");
+  const taskPool = await TaskPool.deploy();
 
   await taskPool.deployed();
 
