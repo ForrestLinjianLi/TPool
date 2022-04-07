@@ -1,9 +1,11 @@
 import './App.css';
+// eslint-disable-next-line no-unused-vars
 import React, {Component} from 'react';
-import TaskPool from './TaskPool'
 import Web3 from 'web3';
 import { useState } from 'react';
 
+const TaskPool = require('./artifacts/contracts/taskPool.sol/TaskPool.json');
+const tokenAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
 class App extends Component {
   async componentWillMount() {
@@ -29,13 +31,8 @@ class App extends Component {
     const accounts = web3.eth.getAccounts();
     this.setState({account: accounts[0]});
     const networkId = await web3.eth.net.getId();
-    const networkData = TaskPool.networks[networkId];
-    console.log(networkData);
-    if (networkData) {
-      const deployedTaskPool = new web3.eth.Contract(TaskPool.abi, networkData.address);
-      this.setState({deployedTaskPool: deployedTaskPool});
-
-    }
+    const deployedTaskPool = new web3.eth.Contract(TaskPool.abi, tokenAddress);
+    this.setState({deployedTaskPool: deployedTaskPool});
   }
 
   constructor(props) {
@@ -49,7 +46,7 @@ class App extends Component {
       credit: null, // freelancer
       isOwner: false,
       currentTask: null, // for freelancer
-      balance: 0 // for owner
+      balance: 0, // for owner
     }
   }
 
