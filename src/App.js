@@ -3,14 +3,15 @@ import {ethers} from 'ethers';
 import React, {Component} from 'react';
 import Web3 from 'web3';
 import { useState } from 'react';
+import AddNewTask from "./components/AddNewTask";
 
 const TaskPool = require('./artifacts/contracts/taskPool.sol/TaskPool.json');
 const tokenAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
 class App extends Component {
-  async componentWillMount() {
-    await this.loadWeb3();
-    await this.connectToBlockchain();
+  componentDidMount() {
+    this.loadWeb3();
+    this.connectToBlockchain();
   }
 
   async loadWeb3() {
@@ -49,35 +50,13 @@ class App extends Component {
       currentTask: null, // for freelancer
       balance: 0, // for owner
     }
-    this.createTask = this.createTask.bind(this);
-    this.getBalance = this.getBalance.bind(this);
+    this.connectToBlockchain = this.connectToBlockchain.bind(this);
+    this.loadWeb3 = this.loadWeb3.bind(this);
   }
-
-  async createTask() {
-    const balance = await this.state.contract.methods.createTask(100000000000, "asdasdsa")
-        .send({ from: this.state.owner, value : ethers.utils.parseEther("100.0")})
-        .on("error", (error) => {
-      console.log(error);
-    }).on("receipt", (recript) => {
-      console.log(recript)
-        });
-  }
-
-  async getBalance() {
-    const balance = await this.state.contract.methods.balanceOfContract().call().then(function(balance) {
-      console.log("Account Balance: ", balance);
-      return balance;
-    });
-    console.log(balance);
-  }
-
 
   render() {
     return (<div className="App">
-      <header className="App-header">
-        <button onClick={this.createTask}>create task</button>
-        <button onClick={this.getBalance}>Get Balance</button>
-      </header>
+      <AddNewTask contract={this.state.contract} owner={this.state.owner}/>
     </div>)
   }
 
