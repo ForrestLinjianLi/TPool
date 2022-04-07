@@ -1,5 +1,5 @@
 import './App.css';
-// eslint-disable-next-line no-unused-vars
+import {ethers} from 'ethers';
 import React, {Component} from 'react';
 import Web3 from 'web3';
 import { useState } from 'react';
@@ -28,11 +28,12 @@ class App extends Component {
 
   async connectToBlockchain() {
     const web3 = window.web3;
-    const accounts = web3.eth.getAccounts();
-    this.setState({account: accounts[0]});
-    const networkId = await web3.eth.net.getId();
+    const accounts = await web3.eth.getAccounts();
     const deployedTaskPool = new web3.eth.Contract(TaskPool.abi, tokenAddress);
-    this.setState({deployedTaskPool: deployedTaskPool});
+    this.setState({
+      contract: deployedTaskPool,
+      owner: accounts[0]
+    });
   }
 
   constructor(props) {
@@ -48,10 +49,36 @@ class App extends Component {
       currentTask: null, // for freelancer
       balance: 0, // for owner
     }
+    this.createTask = this.createTask.bind(this);
+    this.getBalance = this.getBalance.bind(this);
   }
 
+  async createTask() {
+    const balance = await this.state.contract.methods.createTask(100000000000, "asdasdsa")
+        .send({ from: this.state.owner, value : ethers.utils.parseEther("100.0")})
+        .on("error", (error) => {
+      console.log(error);
+    }).on("receipt", (recript) => {
+      console.log(recript)
+        });
+  }
+
+  async getBalance() {
+    const balance = await this.state.contract.methods.balanceOfContract().call().then(function(balance) {
+      console.log("Account Balance: ", balance);
+      return balance;
+    });
+    console.log(balance);
+  }
+
+
   render() {
-    return ""
+    return (<div className="App">
+      <header className="App-header">
+        <button onClick={this.createTask}>create task</button>
+        <button onClick={this.getBalance}>Get Balance</button>
+      </header>
+    </div>)
   }
 
 
