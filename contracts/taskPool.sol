@@ -120,6 +120,8 @@ contract TaskPool {
         } else if (_status == TaskStatus.ONGOING) {
             require(address(this).balance >= (tasks[taskId].commissionFee)/2);
             _owner.transfer(tasks[taskId].commissionFee / 2);
+            freelancers[tasks[taskId].taker].isOccupying = false;
+            payable(tasks[taskId].taker).transfer(tasks[taskId].commissionFee / 2);
         }
         tasks[taskId].status = TaskStatus.CLOSED;
         activeTaskCounter-=1;
@@ -233,7 +235,7 @@ contract TaskPool {
         freelancer.currentTaskId = 0;
         freelancer.isOccupying = false;
         freelancer.credit -= panelty;
-        tasks[taskId].status = TaskStatus.CLOSED;
+        tasks[taskId].status = TaskStatus.TODO;
     }
 
     function finishTask(uint taskId) external isValidTaskID(taskId) isTaskOnGoing(taskId) {

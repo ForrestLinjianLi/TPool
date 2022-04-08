@@ -5,7 +5,9 @@ import {ethers} from "ethers";
 
 class AddNewTask extends Component {
 
-
+    static defaultProps = {
+        onBalanceChange: null,
+    }
 
     constructor(props) {
         super(props);
@@ -13,21 +15,13 @@ class AddNewTask extends Component {
             contract: this.props.contract,
             owner:this.props.owner,
         }
-        this.getBalance = this.getBalance.bind(this);
         this.createTask = this.createTask.bind(this);
     }
 
     componentDidMount() {
-        this.getBalance();
     }
 
-    async getBalance() {
-        let that = this;
-        this.state.contract.methods.balanceOfContract().call().then(function (balance) {
-            let temp = window.web3.utils.fromWei(balance.toString(), 'ether');
-            that.setState({balance: temp})
-        });
-    }
+
 
     createTask() {
         this.state.contract.methods.createTask(window.web3.utils.toWei(this.state.price.toString(), 'Ether'), this.state.content)
@@ -35,16 +29,15 @@ class AddNewTask extends Component {
             .on("error", (error) => {
                 console.log(error);
                 window.alert("Only owner can create tasks!!!");
-            }).on("receipt", (recript) => {
-                console.log(recript);
-                this.getBalance();
+            }).on("receipt", (receipt) => {
+                console.log(receipt);
+                this.props.onBalanceChange();
             });
 
     }
 
     render() {
         return <div id="add-task-panel">
-            <Button variant="primary" disabled={true}>Company Balance: {this.state.balance}</Button>
 
             <Form>
                 <Form.Label>Create Task</Form.Label>
