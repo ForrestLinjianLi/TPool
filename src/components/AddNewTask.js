@@ -24,14 +24,14 @@ class AddNewTask extends Component {
     async getBalance() {
         let that = this;
         this.state.contract.methods.balanceOfContract().call().then(function (balance) {
-            let temp = window.web3.utils.fromWei(balance, 'ether');
+            let temp = window.web3.utils.fromWei(balance.toString(), 'ether');
             that.setState({balance: temp})
         });
     }
 
     createTask() {
-        this.state.contract.methods.createTask(window.web3.utils.toWei(this.state.price, 'Ether'), this.state.content)
-            .send({from: this.state.owner, value: ethers.utils.parseEther(this.state.price), gas: ethers.utils.parseEther("1")})
+        this.state.contract.methods.createTask(window.web3.utils.toWei(this.state.price.toString(), 'Ether'), this.state.content)
+            .send({from: this.state.owner, value: ethers.utils.parseEther(this.state.price.toString())})
             .on("error", (error) => {
                 console.log(error);
                 window.alert(error);
