@@ -24,14 +24,14 @@ class AddNewTask extends Component {
     async getBalance() {
         let that = this;
         this.state.contract.methods.balanceOfContract().call().then(function (balance) {
-            let temp = window.web3.utils.fromWei(balance.toString(), 'ether');
+            let temp = window.web3.utils.fromWei(balance, 'ether');
             that.setState({balance: temp})
         });
     }
 
     createTask() {
-        this.state.contract.methods.createTask(window.web3.utils.toWei(this.state.price.toString(), 'Ether'), this.state.content)
-            .send({from: this.state.owner, value: ethers.utils.parseEther(this.state.price.toString())})
+        this.state.contract.methods.createTask(window.web3.utils.toWei(this.state.price, 'Ether'), this.state.content)
+            .send({from: this.state.owner, value: ethers.utils.parseEther(this.state.price), gas: ethers.utils.parseEther("1")})
             .on("error", (error) => {
                 console.log(error);
                 window.alert(error);
@@ -59,15 +59,19 @@ class AddNewTask extends Component {
                     Add
                 </Button>
             </Form>
+
+            {/*/!*<Button variant="secondary" onClick={this.createTask}>Add</Button>*!/*/}
+
+            {/*<br></br>*/}
             {/*<InputGroup className="mb-3">*/}
-            {/*    <InputGroup.Text>ETH</InputGroup.Text>*/}
+            {/*    <InputGroup.Text>$</InputGroup.Text>*/}
             {/*    <FormControl aria-label="Amount (to the nearest dollar)"/>*/}
             {/*    <InputGroup.Text>.00</InputGroup.Text>*/}
             {/*</InputGroup>*/}
 
             {/*<InputGroup>*/}
-            {/*    <InputGroup.Text>Task Description</InputGroup.Text>*/}
-            {/*    <FormControl  aria-label="With textarea"/>*/}
+            {/*    <InputGroup.Text>With textarea</InputGroup.Text>*/}
+            {/*    <FormControl as="textarea" aria-label="With textarea"/>*/}
             {/*</InputGroup>*/}
             {/*<Button variant="secondary" onClick={this.createTask}>Add</Button>*/}
 
