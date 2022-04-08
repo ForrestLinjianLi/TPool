@@ -34,7 +34,7 @@ class AddNewTask extends Component {
             .send({from: this.state.owner, value: ethers.utils.parseEther(this.state.price.toString())})
             .on("error", (error) => {
                 console.log(error);
-                window.alert(error);
+                window.alert("Only owner can create tasks!!!");
             }).on("receipt", (recript) => {
                 console.log(recript);
                 this.getBalance();

@@ -4,8 +4,10 @@ import React, {Component} from 'react';
 import Web3 from 'web3';
 import { useState } from 'react';
 import AddNewTask from "./components/AddNewTask";
+import CancelTask from "./components/CancelTask";
 import {Col, Container, Nav, Navbar, Row} from "react-bootstrap";
 import ListPanel from "./components/ListPanel";
+
 
 const TaskPool = require('./artifacts/contracts/taskPool.sol/TaskPool.json');
 const tokenAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
@@ -72,7 +74,9 @@ class App extends Component {
       <Container>
         <Row>
           <Col><ListPanel title="Todo Task List" colNames={["Task ID", "Price"]}/></Col>
-          <Col>{this.state.contract && <AddNewTask contract={this.state.contract} owner={this.state.owner}/>}</Col>
+          <Col>{this.state.contract && <AddNewTask contract={this.state.contract} owner={this.state.owner}/>}
+            {this.state.contract && <CancelTask contract={this.state.contract} owner={this.state.owner}/>}
+          </Col>
           <Col><ListPanel title="Ongoing Task List"/></Col>
         </Row>
       </Container>
