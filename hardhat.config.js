@@ -22,4 +22,9 @@ module.exports = {
     artifacts: './src/artifacts',
   },
   solidity: "0.7.6",
+  networks: {
+    hardhat: {
+      chainId: 1337
+    },
+  }
 };

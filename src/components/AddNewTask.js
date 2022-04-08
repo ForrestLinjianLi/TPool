@@ -1,9 +1,12 @@
 import React, {Component} from 'react';
 import Button from 'react-bootstrap/Button';
-import {FormControl, InputGroup} from "react-bootstrap";
+import {Form, FormControl, InputGroup} from "react-bootstrap";
 import {ethers} from "ethers";
 
 class AddNewTask extends Component {
+
+
+
     constructor(props) {
         super(props);
         this.state = {
@@ -21,35 +24,52 @@ class AddNewTask extends Component {
     async getBalance() {
         let that = this;
         this.state.contract.methods.balanceOfContract().call().then(function (balance) {
-            that.setState({balance: balance})
+            let temp = window.web3.utils.fromWei(balance.toString(), 'ether');
+            that.setState({balance: temp})
         });
     }
 
-    async createTask() {
-        const balance = await this.state.contract.methods.createTask(100000000000, "asdasdsa")
-            .send({from: this.state.owner, value: ethers.utils.parseEther("100.0")})
+    createTask() {
+        this.state.contract.methods.createTask(window.web3.utils.toWei(this.state.price.toString(), 'Ether'), this.state.content)
+            .send({from: this.state.owner, value: ethers.utils.parseEther(this.state.price.toString())})
             .on("error", (error) => {
                 console.log(error);
+                window.alert(error);
             }).on("receipt", (recript) => {
-                console.log(recript)
+                console.log(recript);
+                this.getBalance();
             });
+
     }
 
     render() {
         return <div id="add-task-panel">
             <Button variant="primary" disabled={true}>Company Balance: {this.state.balance}</Button>
 
-            <InputGroup className="mb-3">
-                <InputGroup.Text>$</InputGroup.Text>
-                <FormControl aria-label="Amount (to the nearest dollar)"/>
-                <InputGroup.Text>.00</InputGroup.Text>
-            </InputGroup>
+            <Form>
+                <Form.Label>Create Task</Form.Label>
+                <Form.Group className="mb-3" >
+                    <Form.Control value={this.state.price} placeholder="Enter Price (ETH)" type="number" onChange={e => this.setState({price: e.target.value})}/>
+                </Form.Group>
+                <InputGroup>
+                    <FormControl placeholder="Enter Task Description" as="textarea"  value={this.state.content} aria-label="With textarea" onChange={e => this.setState({content:e.target.value})}/>
+                </InputGroup>
 
-            <InputGroup>
-                <InputGroup.Text>With textarea</InputGroup.Text>
-                <FormControl as="textarea" aria-label="With textarea"/>
-            </InputGroup>
-            <Button variant="secondary" onClick={this.createTask}>Add</Button>
+                <Button variant="primary" onClick={this.createTask}>
+                    Add
+                </Button>
+            </Form>
+            {/*<InputGroup className="mb-3">*/}
+            {/*    <InputGroup.Text>ETH</InputGroup.Text>*/}
+            {/*    <FormControl aria-label="Amount (to the nearest dollar)"/>*/}
+            {/*    <InputGroup.Text>.00</InputGroup.Text>*/}
+            {/*</InputGroup>*/}
+
+            {/*<InputGroup>*/}
+            {/*    <InputGroup.Text>Task Description</InputGroup.Text>*/}
+            {/*    <FormControl  aria-label="With textarea"/>*/}
+            {/*</InputGroup>*/}
+            {/*<Button variant="secondary" onClick={this.createTask}>Add</Button>*/}
 
         </div>;
     }

@@ -56,7 +56,7 @@ class App extends Component {
 
   render() {
     return (<div className="App">
-      <AddNewTask contract={this.state.contract} owner={this.state.owner}/>
+      {this.state.contract && <AddNewTask contract={this.state.contract} owner={this.state.owner}/>}
     </div>)
   }
 
