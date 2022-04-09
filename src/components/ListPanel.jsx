@@ -33,7 +33,9 @@ class ListPanel extends Component {
                                         {this.props.rows && this.props.rows.map(r => {
                                             if (i === 0) {
                                                 return <ListGroup.Item
-                                                    style={{backgroundColor: "#3f8b96", color: "white"}}>
+                                                    action
+                                                    style={{backgroundColor: "#3f8b96", color: "white"}}
+                                                onClick={this.onClickPopover}>
                                                     {r[i]}
                                                 </ListGroup.Item>
                                             } else {

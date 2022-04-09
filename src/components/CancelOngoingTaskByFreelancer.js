@@ -45,11 +45,10 @@ class CancelOngoingTaskByFreelancer extends Component {
     render() {
         return <Container className="panel">
             <Form>
-                <Form.Label>Cancel Ongoing Task By Freelancer</Form.Label>
+                <h4>Cancel Ongoing Task By Freelancer</h4>
                 <Form.Group className="mb-3" >
                     <Form.Control value={this.state.taskId} placeholder="Enter Task ID You Want To Cancel" type="number" onChange={e => this.setState({taskId: e.target.value})}/>
                 </Form.Group>
-
                 <Button variant="primary" onClick={this.applyTask} required>
                     Cancel
                 </Button>

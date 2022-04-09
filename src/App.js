@@ -15,6 +15,7 @@ import ApplyTask from "./components/applyTaskByFreelancer";
 import CancelApplication from "./components/cancelApplicationByFreelancer";
 import FinishTaskByFreelancer from "./components/FinishTaskByFreelancer";
 import ConfirmFinishedTaskByOwner from "./components/ConfirmFinishedTaskByOwner";
+import CancelOngoingTaskByFreelancer from "./components/CancelOngoingTaskByFreelancer";
 
 const TaskPool = require('./artifacts/contracts/taskPool.sol/TaskPool.json');
 const tokenAddress = "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d";
@@ -192,6 +193,9 @@ class App extends Component {
                                        currentAddress={this.state.currentAddress}
                                        updateTask={this.onUpdateTask}/>
                             <CancelApplication contract={this.state.contract}
+                                               currentAddress={this.state.currentAddress}
+                                               updateTask={this.onUpdateTask}/>
+                            <CancelOngoingTaskByFreelancer contract={this.state.contract}
                                                currentAddress={this.state.currentAddress}
                                                updateTask={this.onUpdateTask}/>
                             <FinishTaskByFreelancer contract={this.state.contract}
