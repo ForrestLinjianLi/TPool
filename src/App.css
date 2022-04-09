@@ -89,6 +89,6 @@ input.form-control {
 
 @font-face {
   font-family: "Light";   /*Can be any text*/
-  src: local("JetBrainsMono-VariableFont_wght"),
-  url("./font/JetBrainsMono-VariableFont_wght.ttf") format("truetype");
+  src: local("SecularOne-Regular"),
+  url("./font/SecularOne-Regular.ttf") format("truetype");
 }
