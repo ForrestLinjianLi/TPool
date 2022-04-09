@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import Button from 'react-bootstrap/Button';
-import {Form, FormControl, InputGroup} from "react-bootstrap";
+import {Container, Form, FormControl, InputGroup} from "react-bootstrap";
 import {ethers} from "ethers";
 
 class CancelTask extends Component {
@@ -13,7 +13,7 @@ class CancelTask extends Component {
         super(props);
         this.state = {
             contract: this.props.contract,
-            owner:this.props.owner,
+            currentAddress: this.props.currentAddress,
         }
         this.cancelTask = this.cancelTask.bind(this);
     }
@@ -24,31 +24,30 @@ class CancelTask extends Component {
 
     cancelTask() {
         this.state.contract.methods.cancelTaskByOwner(this.state.taskId)
-            .send({from: this.state.owner})
+            .send({from: this.state.currentAddress})
             .on("error", (error) => {
                 console.log(error);
                 window.alert(error.message);
             }).on("receipt", (recript) => {
             console.log(recript);
             this.props.onBalanceChange();
-            });
+            this.props.updateTask();
+        });
     }
 
     render() {
-        return <div id="cancel-task-panel">
+        return <Container className="panel">
             <Form>
-                <Form.Label>Cancel Task</Form.Label>
-                <Form.Group className="mb-3" >
-                    <Form.Control value={this.state.taskId} placeholder="Enter Task ID" type="number" onChange={e => this.setState({taskId: e.target.value})}/>
+                <h4>Cancel Task</h4>
+                <Form.Group className="mb-3">
+                    <Form.Control value={this.state.taskId} placeholder="Enter Task ID" type="number"
+                                  onChange={e => this.setState({taskId: e.target.value})}/>
                 </Form.Group>
-
                 <Button variant="primary" onClick={this.cancelTask}>
                     Cancel
                 </Button>
             </Form>
-
-
-        </div>;
+        </Container>;
     }
 }
 

@@ -9,12 +9,12 @@ contract TaskPool {
     // The minimal donate amount
     uint public minimalDonateAmount = 1 ether;
 
-    uint256 counter;
-    uint256 activeTaskCounter; // The counter of active tasks (todoTask and ongoingTask).
+    uint256 public counter;
+    uint256 public activeTaskCounter; // The counter of active tasks (todoTask and ongoingTask).
     uint256 constant panelty = 1;
     uint256 reward = 1;
 
-    constructor() payable{
+    constructor() payable {
         _owner = msg.sender;
         counter = 1;
     }
@@ -222,6 +222,14 @@ contract TaskPool {
                 break;
             }
         }
+        uint[] storage appliedTasks = freelancers[msg.sender].appliedTasks;
+        for (uint i = 0; i < appliedTasks.length; i++) {
+            if (appliedTasks[i] == taskId) {
+                delete appliedTasks[i];
+                break;
+            }
+        }
+
     }
 
     /**
@@ -272,6 +280,10 @@ contract TaskPool {
     // Return the appliers of a particular task
     function getApplierTasks(uint taskId) public view returns(address[] memory) {
         return tasks[taskId].applier;
+    }
+
+    function getOwnerAddress() public view returns(address) {
+        return _owner;
     }
 
     // Function to receive Ether. msg.data must be empty

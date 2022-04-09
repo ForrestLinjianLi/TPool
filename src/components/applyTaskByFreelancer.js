@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 import Button from 'react-bootstrap/Button';
-import {Form, FormControl, InputGroup} from "react-bootstrap";
-import {ethers} from "ethers";
+import {Container, Form} from "react-bootstrap";
 
 class applyTaskByFreelancer extends Component {
 
@@ -10,7 +9,7 @@ class applyTaskByFreelancer extends Component {
         super(props);
         this.state = {
             contract: this.props.contract,
-            owner:this.props.owner,
+            currentAddress:this.props.currentAddress,
         }
         this.getBalance = this.getBalance.bind(this);
         this.applyTask = this.applyTask.bind(this);
@@ -30,22 +29,22 @@ class applyTaskByFreelancer extends Component {
 
     applyTask() {
         this.state.contract.methods.applyTask(this.state.taskId)
-            .send({from: this.state.owner})
+            .send({from: this.state.currentAddress})
             .on("error", (error) => {
                 console.log(error);
                 window.alert(error.message);
             }).on("receipt", (receipt) => {
             console.log(receipt);
-            // this.getBalance();
+            this.props.updateTask();
         });
 
 
     }
 
     render() {
-        return <div id="apply-task-panel">
+        return <Container className="panel">
             <Form>
-                <Form.Label>Apply Task By Freelancer</Form.Label>
+                <h4>Apply Task</h4>
                 <Form.Group className="mb-3" >
                     <Form.Control value={this.state.taskId} placeholder="Enter Task ID You Want To Apply" type="number" onChange={e => this.setState({taskId: e.target.value})}/>
                 </Form.Group>
@@ -54,9 +53,7 @@ class applyTaskByFreelancer extends Component {
                     Apply
                 </Button>
             </Form>
-
-
-        </div>;
+        </Container>;
     }
 }
 

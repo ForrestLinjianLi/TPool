@@ -1,62 +1,45 @@
 import React, {Component} from 'react';
 import Button from 'react-bootstrap/Button';
-import {Form, FormControl, InputGroup} from "react-bootstrap";
-import {ethers} from "ethers";
+import {Container, Form, FormControl, InputGroup} from "react-bootstrap";
 
 class cancelApplicationByFreelancer extends Component {
-
 
     constructor(props) {
         super(props);
         this.state = {
             contract: this.props.contract,
-            owner:this.props.owner,
+            currentAddress:this.props.currentAddress,
         }
-        this.getBalance = this.getBalance.bind(this);
         this.cancelApplication = this.cancelApplication.bind(this);
-    }
-
-    componentDidMount() {
-        this.getBalance();
-    }
-
-    async getBalance() {
-        let that = this;
-        this.state.contract.methods.balanceOfContract().call().then(function (balance) {
-            let temp = window.web3.utils.fromWei(balance.toString(), 'ether');
-            that.setState({balance: temp})
-        });
     }
 
     cancelApplication() {
         this.state.contract.methods.cancelApplication(this.state.taskId)
-            .send({from: this.state.owner})
+            .send({from: this.state.currentAddress})
             .on("error", (error) => {
                 console.log(error);
                 window.alert(error.message);
             }).on("receipt", (receipt) => {
             console.log(receipt);
-            // this.getBalance();
+            this.props.updateTask();
         });
-
-
     }
 
     render() {
-        return <div id="cancel-application-panel">
+        return <Container className="panel">
             <Form>
-                <Form.Label>Cancel Application By Freelancer</Form.Label>
+                <h4>Cancel Application</h4>
                 <Form.Group className="mb-3" >
                     <Form.Control value={this.state.taskId} placeholder="Enter Task ID You Want To Cancel" type="number" onChange={e => this.setState({taskId: e.target.value})}/>
                 </Form.Group>
 
-                <Button variant="primary" onClick={this.applyTask}>
-                    Cancel Application
+                <Button variant="primary" onClick={this.cancelApplication} required>
+                    Cancel
                 </Button>
             </Form>
 
 
-        </div>;
+        </Container>;
     }
 }
 
