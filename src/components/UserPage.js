@@ -21,9 +21,6 @@ class AddNewTask extends Component {
         this.cancelTask = this.cancelTask.bind(this);
     }
 
-    componentDidMount() {
-    }
-
 
     createTask() {
         this.state.contract.methods.createTask(window.web3.utils.toWei(this.state.price.toString(), 'Ether'), this.state.content)
@@ -62,6 +59,7 @@ class AddNewTask extends Component {
             console.log(receipt);
             this.props.onCreditUpdate();
             this.props.onBalanceChange();
+            this.props.updateTask();
         });
     }
 

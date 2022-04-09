@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {OverlayTrigger, Popover, Col, Container, ListGroup, Row, Modal, Badge} from "react-bootstrap";
+import {OverlayTrigger, Popover, Col, Container, ListGroup, Row, Modal, Badge, ModalFooter} from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 
 
@@ -16,6 +16,21 @@ class ListPanel extends Component {
             handleClose:false
         }
         this.target = React.createRef();
+        this.confirmFinishedTask = this.confirmFinishedTask.bind(this);
+    }
+
+    confirmFinishedTask() {
+        this.props.contract.methods.confirmFinishedTask(this.state.currentTask.taskId)
+            .send({from: this.props.currentAddress})
+            .on("error", (error) => {
+                console.log(error);
+                window.alert(error.message);
+            }).on("receipt", (receipt) => {
+            console.log(receipt);
+            this.props.onCreditUpdate();
+            this.props.onBalanceChange();
+            this.props.updateTask();
+        });
     }
 
 
@@ -56,6 +71,19 @@ class ListPanel extends Component {
                             </Row>
                         </Container>
                     </div>}</Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={() => this.setState({show:false})}>
+                            Close
+                        </Button>
+                        <Button variant="primary" onClick={() => {
+                            this.setState({
+                                show:false
+                            });
+                            this.confirmFinishedTask();
+                        }}>
+                            Confirm
+                        </Button>
+                    </Modal.Footer>
                 </Modal>
                 <label style={{backgroundColor: "#f5cb42", borderRadius: "10px"}}>{this.props.title}</label>
                 <Container style={{backgroundColor: "grey"}}>

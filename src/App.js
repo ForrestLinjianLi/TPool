@@ -43,9 +43,9 @@ class App extends Component {
     async componentWillMount() {
         await this.loadWeb3();
         await this.connectToBlockchain();
-        this.getBalance();
-        this.getCredit();
-        this.getOngoingTaskId();
+        await this.getBalance();
+        await this.getCredit();
+        await this.getOngoingTaskId();
     }
 
     async loadWeb3() {
@@ -126,7 +126,7 @@ class App extends Component {
                 window.alert(error.message);
             }).on("receipt", (receipt => {
             console.log(receipt);
-            // this.onUpdateTask();
+            this.onUpdateTask();
         }));
     }
 
@@ -138,10 +138,10 @@ class App extends Component {
         });
     }
 
-    getCredit() {
+    async getCredit() {
         let that = this;
         this.state.contract.methods.freelancers(this.state.currentAddress).call().then(function (freelancer) {
-            let credit = freelancer.credit;
+            let credit = freelancer.credit==="0"?100:freelancer.credit;
             that.setState({credit: credit})
         });
     }
@@ -173,8 +173,8 @@ class App extends Component {
                     <div style={{display: "flex"}}>
                         <Button variant="primary" disabled={true} style={{marginRight: "1vw"}}>Credit
                             Score: {this.state.credit}</Button>
-                        <Button variant="primary" disabled={true} style={{marginRight: "1vw"}}>Ongoing Task
-                            ID: {this.state.taskId}</Button>
+                        <Button variant={this.state.taskId?'primary':'danger'} disabled={true} style={{marginRight: "1vw"}}>
+                            {this.state.taskId?`Ongoing Task ID: ${this.state.taskId}`:`No Ongoing Task`}</Button>
                     </div>
                 }
             </Navbar>
@@ -219,7 +219,12 @@ class App extends Component {
                         this.state.isOwner ? <Col><OngoingTaskList title="Ongoing Task List"
                                                                    colNames={["Task ID", "Price(ETH)", "Task Taker"]}
                                                                    col={2}
-                                                                   rows={this.state.ongoingTasks}/></Col> :
+                                                                   rows={this.state.ongoingTasks}
+                                                                   onCreditUpdate={this.getCredit}
+                                                                   updateTask={this.onUpdateTask}
+                                                                   contract={this.state.contract}
+                                                                   currentAddress={this.state.currentAddress}
+                                                                   onBalanceChange={this.getBalance}/></Col> :
                             <Col><TaskListPanel title="Applied Task List"
                                                 colNames={["Task ID", "Price(ETH)"]}
                                                 colTitle={["taskId", "commissionFee"]}

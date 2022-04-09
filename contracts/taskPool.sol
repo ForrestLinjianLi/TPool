@@ -38,7 +38,7 @@ contract TaskPool {
         bool isExistedUser;
         bool isOccupying;
         uint currentTaskId;
-        uint credit;
+        uint credit = 100;
         uint[] history;
         uint[] appliedTasks;
     }
