@@ -30,6 +30,7 @@ class App extends Component {
             isOwner: false,
             currentTask: null, // for freelancer
             balance: 0, // for owner
+            taskId: null,
         }
         this.connectToBlockchain = this.connectToBlockchain.bind(this);
         this.loadWeb3 = this.loadWeb3.bind(this);
@@ -146,12 +147,10 @@ class App extends Component {
         });
     }
 
-    getOngoingTaskId() {
+    async getOngoingTaskId() {
         let that = this;
-        this.state.contract.methods.freelancers(this.state.currentAddress).call().then(function (freelancer) {
-            let ongoingTaskId = freelancer.currentTaskId;
-            if (ongoingTaskId == 0) ongoingTaskId = null;
-            that.setState({taskId: ongoingTaskId})
+        await this.state.contract.methods.freelancers(this.state.currentAddress).call().then(function (freelancer) {
+            that.setState({taskId: freelancer.currentTaskId=="0"?null:freelancer.currentTaskId});
         });
     }
 
@@ -168,8 +167,7 @@ class App extends Component {
                     </Nav>
                 </Container>
                 {this.state.isOwner ?
-                    <Button variant="primary" disabled={true} style={{marginRight: "1vw"}}>Company
-                        Balance: {this.state.balance} ETH</Button> :
+                    <Button variant="primary" disabled={true} style={{marginRight: "1vw"}}>Balance: {this.state.balance} ETH</Button> :
                     <div style={{display: "flex"}}>
                         <Button variant="primary" disabled={true} style={{marginRight: "1vw"}}>Credit
                             Score: {this.state.credit}</Button>
@@ -200,9 +198,13 @@ class App extends Component {
                                   onCreditUpdate={this.getCredit}
                                   updateTask={this.onUpdateTask}
                                   onBalanceChange={this.getBalance}/>
-                        <Button variant="primary" onClick={this.confirmTasksByOwner}>
-                            Click to Confirm Task Takers
-                        </Button>
+                        <Container className="panel">
+                            <h4>Confirm All Task Takers</h4>
+                            <Button variant="primary" onClick={this.confirmTasksByOwner}>
+                                Confirm
+                            </Button>
+                        </Container>
+
                     </Col>
                     }
                     {
@@ -212,7 +214,9 @@ class App extends Component {
                             <FreelancerPage contract={this.state.contract}
                                             currentAddress={this.state.currentAddress}
                                             onCreditUpdate={this.getCredit}
-                                            updateTask={this.onUpdateTask}/>
+                                            updateTask={this.onUpdateTask}
+                                            taskId={this.state.taskId}
+                                            updateOngoingTask={this.getOngoingTaskId}/>
                         </Col>
                     }
                     {

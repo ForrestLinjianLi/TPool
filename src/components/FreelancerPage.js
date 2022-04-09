@@ -3,13 +3,11 @@ import Button from 'react-bootstrap/Button';
 import {Container, Form} from "react-bootstrap";
 
 class applyTaskByFreelancer extends Component {
-
-
     constructor(props) {
         super(props);
         this.state = {
             contract: this.props.contract,
-            currentAddress:this.props.currentAddress,
+            currentAddress: this.props.currentAddress,
         }
         this.getBalance = this.getBalance.bind(this);
         this.applyTask = this.applyTask.bind(this);
@@ -55,7 +53,7 @@ class applyTaskByFreelancer extends Component {
     }
 
     finishTask() {
-        this.state.contract.methods.finishTask(this.state.finishTaskId)
+        this.state.contract.methods.finishTask(this.props.taskId)
             .send({from: this.state.currentAddress})
             .on("error", (error) => {
                 console.log(error);
@@ -66,8 +64,7 @@ class applyTaskByFreelancer extends Component {
     }
 
     async cancelOngoingTask() {
-
-        this.state.contract.methods.cancelOngoingTaskByFreelancer(this.state.taskId)
+        this.state.contract.methods.cancelOngoingTaskByFreelancer(this.props.taskId)
             .send({from: this.state.currentAddress})
             .on("error", (error) => {
                 console.log(error);
@@ -75,7 +72,7 @@ class applyTaskByFreelancer extends Component {
             }).on("receipt", async (receipt) => {
             console.log(receipt);
             this.props.onCreditUpdate();
-            this.getOngoingTaskId();
+            this.props.updateOngoingTask();
             this.props.updateTask();
             const appliers = await this.state.contract.methods.getApplierTasks(this.state.taskId).call();
             console.log(appliers);
@@ -86,49 +83,55 @@ class applyTaskByFreelancer extends Component {
 
     render() {
         return <div>
-            <Container className="panel">
-                <Form>
-                    <h4>Apply Task</h4>
-                    <Form.Group className="mb-3" >
-                        <Form.Control value={this.state.applyTaskId} placeholder="Enter Task ID You Want To Apply" type="number" onChange={e => this.setState({applyTaskId: e.target.value})}/>
-                    </Form.Group>
+            {this.props.taskId ? <div>
+                    <Container className="panel">
+                        <Form className="position-relative">
+                            <h4>Finish Ongoing Task</h4>
+                            <Button variant="primary" onClick={this.finishTask}>
+                                Finish
+                            </Button>
+                        </Form>
+                    </Container>
+                    <Container className="panel">
+                        <Form>
+                            <h4>Cancel Ongoing Task</h4>
+                            <Button variant="primary" onClick={this.cancelOngoingTask} required>
+                                Cancel
+                            </Button>
+                        </Form>
+                    </Container>
+                </div> :
+                <div>
+                    <Container className="panel">
+                        <Form>
+                            <h4>Apply Task</h4>
+                            <Form.Group className="mb-3">
+                                <Form.Control value={this.state.applyTaskId}
+                                              placeholder="Enter Task ID You Want To Apply" type="number"
+                                              onChange={e => this.setState({applyTaskId: e.target.value})}/>
+                            </Form.Group>
 
-                    <Button variant="primary" onClick={this.applyTask}>
-                        Apply
-                    </Button>
-                </Form>
-            </Container>
-            <Container className="panel">
-                <Form>
-                    <h4>Cancel Application</h4>
-                    <Form.Group className="mb-3" >
-                        <Form.Control value={this.state.cancelTaskId} placeholder="Enter Task ID You Want To Cancel" type="number" onChange={e => this.setState({cancelTaskId: e.target.value})}/>
-                    </Form.Group>
+                            <Button variant="primary" onClick={this.applyTask}>
+                                Apply
+                            </Button>
+                        </Form>
+                    </Container>
+                    <Container className="panel">
+                        <Form>
+                            <h4>Cancel Application</h4>
+                            <Form.Group className="mb-3">
+                                <Form.Control value={this.state.cancelTaskId}
+                                              placeholder="Enter Task ID You Want To Cancel" type="number"
+                                              onChange={e => this.setState({cancelTaskId: e.target.value})}/>
+                            </Form.Group>
 
-                    <Button variant="primary" onClick={this.cancelApplication} required>
-                        Cancel
-                    </Button>
-                </Form>
-            </Container>
-            <Container className="panel">
-                <Form className="position-relative">
-                    <h4>Finish Ongoing Task</h4>
-                    <Form.Group className="mb-3">
-                        <Form.Control value={this.state.finishTaskId} placeholder="Enter Task ID You Finish" type="number" onChange={e => this.setState({finishTaskId: e.target.value})}/>
-                    </Form.Group>
-                    <Button variant="primary" onClick={this.finishTask}>
-                        Finish
-                    </Button>
-                </Form>
-            </Container>
-            <Container className="panel">
-                <Form>
-                    <h4>Cancel Ongoing Task</h4>
-                    <Button variant="primary" onClick={this.cancelOngoingTask} required>
-                        Cancel
-                    </Button>
-                </Form>
-            </Container>
+                            <Button variant="primary" onClick={this.cancelApplication} required>
+                                Cancel
+                            </Button>
+                        </Form>
+                    </Container>
+                </div>
+            }
         </div>;
     }
 }
