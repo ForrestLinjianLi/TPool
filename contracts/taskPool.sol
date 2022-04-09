@@ -245,11 +245,14 @@ contract TaskPool {
         freelancer.credit -= panelty;
         tasks[taskId].status = TaskStatus.TODO;
         tasks[taskId].taker = address(0);
-        for (uint i = 0; i < tasks[taskId].applier.length; i++) {
+        uint i = 0;
+        while (i < tasks[taskId].applier.length) {
             if (tasks[taskId].applier[i] == msg.sender) {
-                delete tasks[taskId].applier[i];
+                tasks[taskId].applier[i] = tasks[taskId].applier[tasks[taskId].applier.length - 1];
+                tasks[taskId].applier.pop();
                 break;
             }
+            i++;
         }
     }
 

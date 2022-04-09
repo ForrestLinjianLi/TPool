@@ -43,18 +43,20 @@ class CancelOngoingTaskByFreelancer extends Component {
         });
     }
 
-    cancelOngoingTask() {
+    async cancelOngoingTask() {
 
         this.state.contract.methods.cancelOngoingTaskByFreelancer(this.state.taskId)
             .send({from: this.state.currentAddress})
             .on("error", (error) => {
                 console.log(error);
                 window.alert(error.message);
-            }).on("receipt", (receipt) => {
+            }).on("receipt", async (receipt) => {
             console.log(receipt);
             this.props.onCreditUpdate();
             this.getOngoingTaskId();
             this.props.updateTask();
+            const appliers = await this.state.contract.methods.getApplierTasks(this.state.taskId).call();
+            console.log(appliers);
         });
 
 

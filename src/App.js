@@ -18,7 +18,7 @@ import ConfirmFinishedTaskByOwner from "./components/ConfirmFinishedTaskByOwner"
 import CancelOngoingTaskByFreelancer from "./components/CancelOngoingTaskByFreelancer";
 
 const TaskPool = require('./artifacts/contracts/taskPool.sol/TaskPool.json');
-const tokenAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const tokenAddress = "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e";
 
 class App extends Component {
 
