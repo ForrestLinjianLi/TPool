@@ -3,22 +3,18 @@ import './App.css';
 import './font/JetBrainsMono-VariableFont_wght.ttf';
 import React, {Component} from 'react';
 import Web3 from 'web3';
-import AddNewTask from "./components/AddNewTask";
-import CancelTask from "./components/CancelTask";
 import {Col, Container, Nav, Navbar, Row, Image} from "react-bootstrap";
-import ListPanel from "./components/ListPanel";
+import TaskListPanel from "./components/TaskListPanel";
 import Button from 'react-bootstrap/Button';
 import logo from './static/logo.png';
 import taskCreater from './static/taskCreater.jpg';
 import freelancer from './static/freelancer.jpg';
-import ApplyTask from "./components/applyTaskByFreelancer";
-import CancelApplication from "./components/cancelApplicationByFreelancer";
-import FinishTaskByFreelancer from "./components/FinishTaskByFreelancer";
-import ConfirmFinishedTaskByOwner from "./components/ConfirmFinishedTaskByOwner";
-import CancelOngoingTaskByFreelancer from "./components/CancelOngoingTaskByFreelancer";
+import OngoingTaskList from "./components/OngoingTaskList";
+import UserPage from "./components/UserPage";
+import FreelancerPage from "./components/FreelancerPage";
 
 const TaskPool = require('./artifacts/contracts/taskPool.sol/TaskPool.json');
-const tokenAddress = "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e";
+const tokenAddress = "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1";
 
 class App extends Component {
 
@@ -76,36 +72,39 @@ class App extends Component {
 
     async onUpdateTask() {
         const deployedTaskPool = this.state.contract;
-        const taskCount = await deployedTaskPool.methods.counter().call();
+        const taskCount = parseInt(await deployedTaskPool.methods.counter().call());
         let todoTasks = [], ongoingTasks = [], appliedTasks = [], finishedTasks = [];
         const isOwner = await deployedTaskPool.methods.getOwnerAddress().call() === this.state.currentAddress;
         if (isOwner) {
             for (var i = 1; i <= taskCount; i++) {
-                const task = await deployedTaskPool.methods.tasks(i).call();
+                let task = await deployedTaskPool.methods.tasks(i).call();
+                task.commissionFee = window.web3.utils.fromWei(task.commissionFee.toString(), 'ether');
                 switch (task.status) {
                     case "1":
-                        todoTasks.push([task.taskId, window.web3.utils.fromWei(task.commissionFee.toString(), 'ether')]);
+                        todoTasks.push(task);
                         break;
                     case "2":
-                        ongoingTasks.push([task.taskId, window.web3.utils.fromWei(task.commissionFee.toString(), 'ether'), task.taker]);
+                        ongoingTasks.push(task);
                         break;
                     case "3":
-                        finishedTasks.push([task.taskId, window.web3.utils.fromWei(task.commissionFee.toString(), 'ether'), task.taker]);
+                        ongoingTasks.push(task);
+                        break;
                 }
             }
         } else {
             const appliedTaskIds = await deployedTaskPool.methods.getAppliedTaskFreelancer(this.state.currentAddress).call();
             for (var i = 1; i <= taskCount; i++) {
                 const task = await deployedTaskPool.methods.tasks(i).call();
+                task.commissionFee = window.web3.utils.fromWei(task.commissionFee.toString(), 'ether');
                 switch (task.status) {
                     case "1":
                         if (appliedTaskIds.includes(task.taskId)) {
-                            appliedTasks.push([task.taskId, window.web3.utils.fromWei(task.commissionFee.toString(), 'ether')])
+                            appliedTasks.push(task)
                         }
-                        todoTasks.push([task.taskId, window.web3.utils.fromWei(task.commissionFee.toString(), 'ether')]);
+                        todoTasks.push(task);
                         break;
                     case "3":
-                        finishedTasks.push([task.taskId, window.web3.utils.fromWei(task.commissionFee.toString(), 'ether'), task.taker]);
+                        finishedTasks.push(task);
                 }
             }
         }
@@ -115,7 +114,7 @@ class App extends Component {
             appliedTasks: appliedTasks,
             finishedTasks: finishedTasks,
             count: taskCount + 1,
-            isOwner: isOwner ,
+            isOwner: isOwner,
         })
     }
 
@@ -151,7 +150,7 @@ class App extends Component {
         let that = this;
         this.state.contract.methods.freelancers(this.state.currentAddress).call().then(function (freelancer) {
             let ongoingTaskId = freelancer.currentTaskId;
-            if (ongoingTaskId == 0)  ongoingTaskId=null;
+            if (ongoingTaskId == 0) ongoingTaskId = null;
             that.setState({taskId: ongoingTaskId})
         });
     }
@@ -159,7 +158,7 @@ class App extends Component {
     render() {
         return (<div className="App">
             <Navbar bg="dark" variant="dark">
-                <Image src={logo} width={40} height={40} style={{marginLeft:"1vw"}}/>
+                <Image src={logo} width={40} height={40} style={{marginLeft: "1vw"}}/>
                 <Container>
                     <Navbar.Brand href="#home">TPool</Navbar.Brand>
                     <Nav className="me-auto">
@@ -171,34 +170,36 @@ class App extends Component {
                 {this.state.isOwner ?
                     <Button variant="primary" disabled={true} style={{marginRight: "1vw"}}>Company
                         Balance: {this.state.balance} ETH</Button> :
-                    <div style={{display:"flex"}}>
+                    <div style={{display: "flex"}}>
                         <Button variant="primary" disabled={true} style={{marginRight: "1vw"}}>Credit
                             Score: {this.state.credit}</Button>
-                        <Button variant="primary" disabled={true} style={{marginRight: "1vw"}}>Ongoing Task ID: {this.state.taskId}</Button>
+                        <Button variant="primary" disabled={true} style={{marginRight: "1vw"}}>Ongoing Task
+                            ID: {this.state.taskId}</Button>
                     </div>
                 }
             </Navbar>
 
-            <Container >
+            <Container>
                 <Row>
-                    <Col><ListPanel title="Todo Task List"
-                                    colNames={["Task ID", "Price(ETH)"]}
-                                    col={2}
-                                    rows={this.state.todoTasks}/></Col>
+                    <Col><TaskListPanel title="Todo Task List"
+                                        colNames={["Task ID", "Price(ETH)"]}
+                                        colTitle={["taskId", "commissionFee"]}
+                                        col={2}
+                                        rows={this.state.todoTasks}
+                                        isTodo={true}
+                                        apply={!this.state.isOwner}
+                                        confirmTask={this.state.isOwner}
+                                        currentAddress={this.state.currentAddress}
+                                        updateTask={this.onUpdateTask}
+                                        contract={this.state.contract}
+                    /></Col>
                     {this.state.isOwner && this.state.contract && <Col>
                         <Image className="img-responsive" src={taskCreater} width="400" height="300"/>
-                        <AddNewTask contract={this.state.contract}
-                                    currentAddress={this.state.currentAddress}
-                                    updateTask={this.onUpdateTask}
-                                    onBalanceChange={this.getBalance}/>
-                        <CancelTask contract={this.state.contract}
-                                    currentAddress={this.state.currentAddress}
-                                    updateTask={this.onUpdateTask}
-                                    onBalanceChange={this.getBalance}/>
-                        <ConfirmFinishedTaskByOwner contract={this.state.contract}
-                                                    currentAddress={this.state.currentAddress}
-                                                    onCreditUpdate={this.getCredit}
-                                                    onBalanceChange={this.getBalance}/>
+                        <UserPage contract={this.state.contract}
+                                  currentAddress={this.state.currentAddress}
+                                  onCreditUpdate={this.getCredit}
+                                  updateTask={this.onUpdateTask}
+                                  onBalanceChange={this.getBalance}/>
                         <Button variant="primary" onClick={this.confirmTasksByOwner}>
                             Click to Confirm Task Takers
                         </Button>
@@ -208,33 +209,29 @@ class App extends Component {
                         !this.state.isOwner && this.state.contract &&
                         <Col>
                             <Image src={freelancer} className="img-responsive" width="150" height="150"/>
-
-                            <ApplyTask contract={this.state.contract}
-                                       currentAddress={this.state.currentAddress}
-                                       updateTask={this.onUpdateTask}/>
-                            <CancelApplication contract={this.state.contract}
-                                               currentAddress={this.state.currentAddress}
-                                               updateTask={this.onUpdateTask}/>
-                            <CancelOngoingTaskByFreelancer contract={this.state.contract}
-                                               currentAddress={this.state.currentAddress}
-                                               onCreditUpdate={this.getCredit}
-                                               updateTask={this.onUpdateTask}/>
-                            <FinishTaskByFreelancer contract={this.state.contract}
-                                                    currentAddress={this.state.currentAddress}
-                                                    updateTask={this.onUpdateTask}/>
+                            <FreelancerPage contract={this.state.contract}
+                                            currentAddress={this.state.currentAddress}
+                                            onCreditUpdate={this.getCredit}
+                                            updateTask={this.onUpdateTask}/>
                         </Col>
                     }
                     {
-                        this.state.isOwner ? <Col><ListPanel title="Ongoing Task List"
-                                                             colNames={["Task ID", "Price(ETH)", "Task Taker"]}
-                                                             col={3}
-                                                             rows={this.state.ongoingTasks}/></Col> :
-                            <Col><ListPanel title="Applied Task List"
-                                            colNames={["Task ID", "Price(ETH)"]}
-                                            col={2}
-                                            rows={this.state.appliedTasks}/></Col>
+                        this.state.isOwner ? <Col><OngoingTaskList title="Ongoing Task List"
+                                                                   colNames={["Task ID", "Price(ETH)", "Task Taker"]}
+                                                                   col={2}
+                                                                   rows={this.state.ongoingTasks}/></Col> :
+                            <Col><TaskListPanel title="Applied Task List"
+                                                colNames={["Task ID", "Price(ETH)"]}
+                                                colTitle={["taskId", "commissionFee"]}
+                                                col={2}
+                                                cancelApplication
+                                                rows={this.state.appliedTasks}
+                                                isTodo={false}
+                                                contract={this.state.contract}
+                                                currentAddress={this.state.currentAddress}
+                                                updateTask={this.onUpdateTask}
+                            /></Col>
                     }
-
                 </Row>
             </Container>
         </div>)

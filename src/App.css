@@ -33,13 +33,28 @@ label {
 
 .btn.btn-primary {
   background-color: #d43785;
-  box-shadow: 5px 5px 5px black;
+
   color: black;
+}
+
+.btn {
+  box-shadow: 5px 5px 5px black;
 }
 
 input.form-control {
   background-color: #e6a1c3;
   box-shadow: 5px 5px 5px black;
+}
+
+.listgroup-item {
+  position: relative;
+}
+
+.badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  z-index: 1;
 }
 
 @media (prefers-reduced-motion: no-preference) {

@@ -29,6 +29,7 @@ contract TaskPool {
         uint commissionFee;
         uint256 deadline;
         TaskStatus status;
+        uint applierCount;
         address[] applier;
     }
 
@@ -133,48 +134,53 @@ contract TaskPool {
     function confirmTaskTakers() external isOwner {
         // Note that task ID starts from 1.
         for(uint i=1; i<=counter; i++){
-            TaskStatus _status = tasks[i].status;
+            pickApplier(tasks[i]);
+        }
+    }
 
-            // Only confirm takers when the task status is "to do".
-            if(_status == TaskStatus.TODO){
-                address[] storage curApplier = tasks[i].applier;
-                if(curApplier.length > 0){
-                    uint highestCreditSoFar = 0;
-                    address bestApplier = address(0);
-                    // Looking for the best applier with the highest credit to be the task taker.
-                    for(uint j=0; j<curApplier.length; j++){
-                        Freelancer storage f = freelancers[curApplier[j]];
-                        // Only when the applier is not occupied:
-                        if(!f.isOccupying && f.credit > highestCreditSoFar){
-                            highestCreditSoFar = f.credit;
-                            bestApplier = curApplier[j];
-                        }
-                        // Remove the tasks[i] from the all the appliers' applied tasks.
-                        uint[] storage curApplierTasks = f.appliedTasks;
-                        for (uint k = 0; k < curApplierTasks.length;k++) {
-                            if(curApplierTasks[k] == tasks[i].taskId) {
-                                delete curApplierTasks[k];
-                                break;
-                            }
+    /**
+    Confirm the task takers of all the tasks based on the freelancers' credits
+     */
+    function confirmTaskTakersById(uint taskId) external isOwner {
+        pickApplier(tasks[taskId]);
+    }
+
+    function pickApplier(Task storage task) internal {
+        TaskStatus _status = task.status;
+        // Only confirm takers when the task status is "to do".
+        if(_status == TaskStatus.TODO){
+            address[] storage curApplier = task.applier;
+            if(curApplier.length > 0){
+                uint highestCreditSoFar = 0;
+                address bestApplier = address(0);
+                // Looking for the best applier with the highest credit to be the task taker.
+                for(uint j=0; j<curApplier.length; j++){
+                    Freelancer storage f = freelancers[curApplier[j]];
+                    // Only when the applier is not occupied:
+                    if(!f.isOccupying && f.credit > highestCreditSoFar){
+                        highestCreditSoFar = f.credit;
+                        bestApplier = curApplier[j];
+                    }
+                    // Remove the tasks[i] from the all the appliers' applied tasks.
+                    uint[] storage curApplierTasks = f.appliedTasks;
+                    for (uint k = 0; k < curApplierTasks.length;k++) {
+                        if(curApplierTasks[k] == task.taskId) {
+                            curApplierTasks[k] =curApplierTasks[curApplierTasks.length - 1];
+                            curApplierTasks.pop();
+                            break;
                         }
                     }
-
-                    //Update the task's attributes.
-                    //TODO: Handling due date.
-                    tasks[i].taker = bestApplier;
-                    tasks[i].status = TaskStatus.ONGOING;
-    
-
-                    // Update the taker's attributes.
-
-                    freelancers[bestApplier].isOccupying = true;
-                    freelancers[bestApplier].currentTaskId = i;
-                    freelancers[bestApplier].history.push(tasks[i].taskId);
                 }
+                //Update the task's attributes.
+                //TODO: Handling due date.
+                task.taker = bestApplier;
+                task.status = TaskStatus.ONGOING;
+                // Update the taker's attributes.
+                freelancers[bestApplier].isOccupying = true;
+                freelancers[bestApplier].currentTaskId = task.taskId;
+                freelancers[bestApplier].history.push(task.taskId);
             }
         }
-        
-        
     }
     /**
     taskId is unused, need to delete. Ask Manager Li for permission!!
@@ -209,6 +215,7 @@ contract TaskPool {
             f.appliedTasks.push(taskId);
             Task storage task = tasks[taskId];
             task.applier.push(msg.sender);
+            task.applierCount = task.applier.length;
         }
     }
     /**
@@ -218,18 +225,20 @@ contract TaskPool {
         Task storage task = tasks[taskId];
         for (uint i = 0; i < task.applier.length; i++) {
             if (task.applier[i] == msg.sender) {
-                delete task.applier[i];
+                task.applier[i] =task.applier[task.applier.length - 1];
+                task.applier.pop();
                 break;
             }
         }
         uint[] storage appliedTasks = freelancers[msg.sender].appliedTasks;
         for (uint i = 0; i < appliedTasks.length; i++) {
             if (appliedTasks[i] == taskId) {
-                delete appliedTasks[i];
+                appliedTasks[i] = appliedTasks[appliedTasks.length - 1];
+                appliedTasks.pop();
                 break;
             }
         }
-
+        task.applierCount = task.applier.length;
     }
 
     /**
@@ -250,10 +259,12 @@ contract TaskPool {
             if (tasks[taskId].applier[i] == msg.sender) {
                 tasks[taskId].applier[i] = tasks[taskId].applier[tasks[taskId].applier.length - 1];
                 tasks[taskId].applier.pop();
+                tasks[taskId].applierCount = tasks[taskId].applier.length;
                 break;
             }
             i++;
         }
+
     }
 
     function finishTask(uint taskId) external isValidTaskID(taskId) isTaskOnGoing(taskId) {
@@ -271,6 +282,7 @@ contract TaskPool {
         freelancer.credit += reward;
         payable(task.taker).transfer(task.commissionFee);
     }
+
 
     // Return the balance of this contract
     function balanceOfContract() external view returns (uint256) {
