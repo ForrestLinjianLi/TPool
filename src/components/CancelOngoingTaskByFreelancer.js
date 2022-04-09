@@ -6,6 +6,10 @@ import {ethers} from "ethers";
 class CancelOngoingTaskByFreelancer extends Component {
 
 
+    static defaultProps = {
+        onCreditUpdate: null,
+    }
+
     constructor(props) {
         super(props);
         this.state = {
@@ -14,10 +18,12 @@ class CancelOngoingTaskByFreelancer extends Component {
         }
         this.getBalance = this.getBalance.bind(this);
         this.cancelOngoingTask = this.cancelOngoingTask.bind(this);
+        this.getOngoingTaskId = this.getOngoingTaskId.bind(this);
     }
 
     componentDidMount() {
         this.getBalance();
+        this.getOngoingTaskId();
     }
 
     async getBalance() {
@@ -28,7 +34,17 @@ class CancelOngoingTaskByFreelancer extends Component {
         });
     }
 
+    getOngoingTaskId() {
+        let that = this;
+        this.state.contract.methods.freelancers(this.state.currentAddress).call().then(function (freelancer) {
+            let ongoingTaskId = freelancer.currentTaskId;
+            if (ongoingTaskId == 0)  ongoingTaskId=null;
+            that.setState({taskId: ongoingTaskId})
+        });
+    }
+
     cancelOngoingTask() {
+
         this.state.contract.methods.cancelOngoingTaskByFreelancer(this.state.taskId)
             .send({from: this.state.currentAddress})
             .on("error", (error) => {
@@ -36,6 +52,8 @@ class CancelOngoingTaskByFreelancer extends Component {
                 window.alert(error.message);
             }).on("receipt", (receipt) => {
             console.log(receipt);
+            this.props.onCreditUpdate();
+            this.getOngoingTaskId();
             this.props.updateTask();
         });
 
@@ -45,11 +63,11 @@ class CancelOngoingTaskByFreelancer extends Component {
     render() {
         return <Container className="panel">
             <Form>
-                <h4>Cancel Ongoing Task By Freelancer</h4>
-                <Form.Group className="mb-3" >
-                    <Form.Control value={this.state.taskId} placeholder="Enter Task ID You Want To Cancel" type="number" onChange={e => this.setState({taskId: e.target.value})}/>
-                </Form.Group>
-                <Button variant="primary" onClick={this.applyTask} required>
+                <h4>Cancel Ongoing Task</h4>
+                {/*<Form.Group className="mb-3" >*/}
+                {/*    <Form.Control value={this.state.taskId} placeholder="Enter Task ID You Want To Cancel" type="number" onChange={e => this.setState({taskId: e.target.value})}/>*/}
+                {/*</Form.Group>*/}
+                <Button variant="primary" onClick={this.cancelOngoingTask} required>
                     Cancel
                 </Button>
             </Form>

@@ -18,7 +18,7 @@ import ConfirmFinishedTaskByOwner from "./components/ConfirmFinishedTaskByOwner"
 import CancelOngoingTaskByFreelancer from "./components/CancelOngoingTaskByFreelancer";
 
 const TaskPool = require('./artifacts/contracts/taskPool.sol/TaskPool.json');
-const tokenAddress = "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d";
+const tokenAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
 class App extends Component {
 
@@ -41,6 +41,7 @@ class App extends Component {
         this.getBalance = this.getBalance.bind(this);
         this.getCredit = this.getCredit.bind(this);
         this.onUpdateTask = this.onUpdateTask.bind(this);
+        this.getOngoingTaskId = this.getOngoingTaskId.bind(this);
     }
 
     async componentWillMount() {
@@ -48,6 +49,7 @@ class App extends Component {
         await this.connectToBlockchain();
         this.getBalance();
         this.getCredit();
+        this.getOngoingTaskId();
     }
 
     async loadWeb3() {
@@ -125,6 +127,7 @@ class App extends Component {
                 window.alert(error.message);
             }).on("receipt", (receipt => {
             console.log(receipt);
+            // this.onUpdateTask();
         }));
     }
 
@@ -144,6 +147,15 @@ class App extends Component {
         });
     }
 
+    getOngoingTaskId() {
+        let that = this;
+        this.state.contract.methods.freelancers(this.state.currentAddress).call().then(function (freelancer) {
+            let ongoingTaskId = freelancer.currentTaskId;
+            if (ongoingTaskId == 0)  ongoingTaskId=null;
+            that.setState({taskId: ongoingTaskId})
+        });
+    }
+
     render() {
         return (<div className="App">
             <Navbar bg="dark" variant="dark">
@@ -156,9 +168,15 @@ class App extends Component {
                         <Nav.Link href="#pricing">Contact</Nav.Link>
                     </Nav>
                 </Container>
-              {this.state.isOwner ?
-                  <Button variant="primary" disabled={true} style={{marginRight:"1vw"}}>Company Balance: {this.state.balance} ETH</Button> :
-                  <Button variant="primary" disabled={true} style={{marginRight:"1vw"}}>Freelancer Credit Score: {this.state.credit}</Button>}
+                {this.state.isOwner ?
+                    <Button variant="primary" disabled={true} style={{marginRight: "1vw"}}>Company
+                        Balance: {this.state.balance} ETH</Button> :
+                    <div style={{display:"flex"}}>
+                        <Button variant="primary" disabled={true} style={{marginRight: "1vw"}}>Credit
+                            Score: {this.state.credit}</Button>
+                        <Button variant="primary" disabled={true} style={{marginRight: "1vw"}}>Ongoing Task ID: {this.state.taskId}</Button>
+                    </div>
+                }
             </Navbar>
 
             <Container >
@@ -179,6 +197,7 @@ class App extends Component {
                                     onBalanceChange={this.getBalance}/>
                         <ConfirmFinishedTaskByOwner contract={this.state.contract}
                                                     currentAddress={this.state.currentAddress}
+                                                    onCreditUpdate={this.getCredit}
                                                     onBalanceChange={this.getBalance}/>
                         <Button variant="primary" onClick={this.confirmTasksByOwner}>
                             Click to Confirm Task Takers
@@ -189,6 +208,7 @@ class App extends Component {
                         !this.state.isOwner && this.state.contract &&
                         <Col>
                             <Image src={freelancer} className="img-responsive" width="150" height="150"/>
+
                             <ApplyTask contract={this.state.contract}
                                        currentAddress={this.state.currentAddress}
                                        updateTask={this.onUpdateTask}/>
@@ -197,6 +217,7 @@ class App extends Component {
                                                updateTask={this.onUpdateTask}/>
                             <CancelOngoingTaskByFreelancer contract={this.state.contract}
                                                currentAddress={this.state.currentAddress}
+                                               onCreditUpdate={this.getCredit}
                                                updateTask={this.onUpdateTask}/>
                             <FinishTaskByFreelancer contract={this.state.contract}
                                                     currentAddress={this.state.currentAddress}

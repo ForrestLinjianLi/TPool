@@ -86,7 +86,7 @@ contract TaskPool {
     }
 
     modifier beforeAssignTaskTaker(uint taskId, address flId) {
-        require(tasks[taskId].status <= TaskStatus.ONGOING, "Task is already taken!");
+        require(tasks[taskId].status < TaskStatus.ONGOING, "Task is already taken!");
         require(tasks[taskId].status != TaskStatus.NONE, "Task does not exist!");
         require(!freelancers[flId].isOccupying, "The task taker has another ongoing task, each task taker can only have one task");
         _;
@@ -244,6 +244,13 @@ contract TaskPool {
         freelancer.isOccupying = false;
         freelancer.credit -= panelty;
         tasks[taskId].status = TaskStatus.TODO;
+        tasks[taskId].taker = address(0);
+        for (uint i = 0; i < tasks[taskId].applier.length; i++) {
+            if (tasks[taskId].applier[i] == msg.sender) {
+                delete tasks[taskId].applier[i];
+                break;
+            }
+        }
     }
 
     function finishTask(uint taskId) external isValidTaskID(taskId) isTaskOnGoing(taskId) {

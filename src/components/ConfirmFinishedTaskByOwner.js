@@ -7,6 +7,7 @@ class ConfirmFinishedTaskByOwner extends Component {
 
     static defaultProps = {
         onBalanceChange: null,
+        onCreditUpdate: null,
     }
 
     constructor(props) {
@@ -30,6 +31,7 @@ class ConfirmFinishedTaskByOwner extends Component {
                 window.alert(error.message);
             }).on("receipt", (receipt) => {
             console.log(receipt);
+            this.props.onCreditUpdate();
             this.props.onBalanceChange();
         });
 
