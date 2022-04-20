@@ -33,7 +33,7 @@ class AddNewTask extends Component {
             this.props.onBalanceChange();
             this.props.updateTask();
         });
-
+        this.setState({taskId: "", content: ""});
     }
 
     cancelTask() {
@@ -47,6 +47,7 @@ class AddNewTask extends Component {
             this.props.onBalanceChange();
             this.props.updateTask();
         });
+        this.setState({taskId: ""});
     }
 
     confirmFinishedTask() {
@@ -61,6 +62,7 @@ class AddNewTask extends Component {
             this.props.onBalanceChange();
             this.props.updateTask();
         });
+        this.setState({taskId: ""});
     }
 
     render() {

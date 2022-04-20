@@ -1,5 +1,13 @@
 import React, {Component} from 'react';
-import {OverlayTrigger, Popover, Col, Container, ListGroup, Row, Modal, Badge, ModalFooter} from "react-bootstrap";
+import {
+    Col,
+    Container,
+    ListGroup,
+    Row,
+    Modal,
+    Badge,
+    Form, Dropdown, DropdownButton,
+} from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 
 
@@ -13,7 +21,8 @@ class ListPanel extends Component {
         super(props);
         this.state = {
             show:false,
-            handleClose:false
+            handleClose:false,
+            currentList: 0,
         }
         this.target = React.createRef();
         this.confirmFinishedTask = this.confirmFinishedTask.bind(this);
@@ -85,13 +94,17 @@ class ListPanel extends Component {
                         </Button>
                     </Modal.Footer>
                 </Modal>
-                <label style={{backgroundColor: "#f5cb42", borderRadius: "10px"}}>{this.props.title}</label>
+                <DropdownButton style={{backgroundColor: "#f5cb42", borderRadius: "10px", width: "100%"}}
+                                title={this.props.titles[this.state.currentList]}
+                                onSelect={(e)=> this.setState({currentList: e})}>
+                    {this.props.titles.map((item, index) => <Dropdown.Item eventKey={index} >{item}</Dropdown.Item>)}
+                </DropdownButton>
                 <Container style={{backgroundColor: "grey"}}>
                     <Row sm={this.props.col} style={{padding: "10px"}}>
                         <Col>
                             <label style={{marginBottom: "10px"}}>Task ID</label>
                             <ListGroup>
-                                {this.props.rows && this.props.rows.map((task,i) => {
+                                {this.props.rows && this.props.rows[this.state.currentList].map((task,i) => {
                                     return <ListGroup.Item
                                         action
                                         style={{backgroundColor: "#3f8b96", color: "white"}}
@@ -106,7 +119,7 @@ class ListPanel extends Component {
                         <Col>
                             <label style={{marginBottom: "10px"}}>Price (ETH)</label>
                             <ListGroup>
-                                {this.props.rows && this.props.rows.map(task => {
+                                {this.props.rows && this.props.rows[this.state.currentList].map(task => {
                                     return <ListGroup.Item
                                         style={{backgroundColor: "#3f8b96", color: "white"}}
                                         onClick={this.onClickPopover}>

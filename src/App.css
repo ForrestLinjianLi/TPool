@@ -2,6 +2,7 @@
   text-align: center;
   background-color: #5cadf7;
   height: 100vh;
+  overflow: auto;
   width: 100vw;
   font-weight: bolder;
   font-family: "Light", serif;
@@ -33,17 +34,17 @@ label {
 
 .btn.btn-primary {
   background-color: #d43785;
-
   color: black;
 }
 
-.btn {
+.container .btn {
   box-shadow: 5px 5px 5px black;
 }
 
 input.form-control {
   background-color: #e6a1c3;
   box-shadow: 5px 5px 5px black;
+  border-color: #3f8b96;
 }
 
 .listgroup-item {
@@ -55,6 +56,17 @@ input.form-control {
   top: -5px;
   right: -5px;
   z-index: 1;
+}
+
+.dropdown .btn, .dropdown-menu {
+  box-shadow: none;
+  background-color: inherit;
+  border: none;
+  width: 100%;
+}
+
+.dropdown .btn:hover,.show>.btn-primary.dropdown-toggle {
+  background-color: inherit;
 }
 
 @media (prefers-reduced-motion: no-preference) {

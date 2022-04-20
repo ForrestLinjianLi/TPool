@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import Button from 'react-bootstrap/Button';
-import {Container, Form} from "react-bootstrap";
+import {Col, Container, Form, Row} from "react-bootstrap";
 
 class applyTaskByFreelancer extends Component {
     constructor(props) {
@@ -38,6 +38,7 @@ class applyTaskByFreelancer extends Component {
             console.log(receipt);
             this.props.updateTask();
         });
+        this.setState({applyTaskId: ""});
     }
 
     cancelApplication() {
@@ -50,21 +51,23 @@ class applyTaskByFreelancer extends Component {
             console.log(receipt);
             this.props.updateTask();
         });
+        this.setState({cancelTaskId: ""});
     }
 
     finishTask() {
-        this.state.contract.methods.finishTask(this.props.taskId)
+        this.state.contract.methods.finishTask(this.props.task.taskId)
             .send({from: this.state.currentAddress})
             .on("error", (error) => {
                 console.log(error);
                 window.alert(error.message);
             }).on("receipt", (receipt) => {
-            console.log(receipt);
+            this.props.onCreditUpdate();
+            this.props.updateOngoingTask();
         });
     }
 
     async cancelOngoingTask() {
-        this.state.contract.methods.cancelOngoingTaskByFreelancer(this.props.taskId)
+        this.state.contract.methods.cancelOngoingTaskByFreelancer(this.props.task.taskId)
             .send({from: this.state.currentAddress})
             .on("error", (error) => {
                 console.log(error);
@@ -83,7 +86,37 @@ class applyTaskByFreelancer extends Component {
 
     render() {
         return <div>
-            {this.props.taskId ? <div>
+            {this.props.task ? <div>
+                    <Container className="panel">
+                        <h4>Current Task</h4>
+                            <Row>
+                                <Col xs={6} md={5} style={{fontWeight: 'bold'}}>
+                                    Task Taker Address:
+                                </Col>
+                                <Col xs={6} md={7} style={{wordWrap: "break-word"}}>
+                                    {this.props.task.taker}
+                                </Col>
+                            </Row>
+                            <br/>
+                            <Row>
+                                <Col xs={4} md={5} style={{fontWeight: 'bold'}}>
+                                    Task Description:
+                                </Col>
+                                <Col xs={6} md={7} style={{wordWrap: "break-word"}}>
+                                    {this.props.task.description}
+                                </Col>
+                            </Row>
+                            <br/>
+                            <Row>
+                                <Col xs={4} md={5} style={{fontWeight: 'bold'}}>
+                                    Status:
+                                </Col>
+                                <Col xs={6} md={7} style={{wordWrap: "break-word"}}>
+                                    {this.props.task.status==="2" && "Please click finish once you have done the task."}
+                                    {this.props.task.status==="3" && "Waiting for the task creator to confirm."}
+                                </Col>
+                            </Row>
+                    </Container>
                     <Container className="panel">
                         <Form className="position-relative">
                             <h4>Finish Ongoing Task</h4>

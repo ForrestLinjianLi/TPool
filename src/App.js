@@ -14,7 +14,7 @@ import UserPage from "./components/UserPage";
 import FreelancerPage from "./components/FreelancerPage";
 
 const TaskPool = require('./artifacts/contracts/taskPool.sol/TaskPool.json');
-const tokenAddress = "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1";
+const tokenAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
 class App extends Component {
 
@@ -30,7 +30,13 @@ class App extends Component {
             isOwner: false,
             currentTask: null, // for freelancer
             balance: 0, // for owner
-            taskId: null,
+            task: null,
+            appliedTasks: [],
+            ongoingTasks: [],
+            todoTasks: [],
+            completedTasks: [],
+            closedTasks: [],
+            finishedTasks: [],
         }
         this.connectToBlockchain = this.connectToBlockchain.bind(this);
         this.loadWeb3 = this.loadWeb3.bind(this);
@@ -38,7 +44,7 @@ class App extends Component {
         this.getBalance = this.getBalance.bind(this);
         this.getCredit = this.getCredit.bind(this);
         this.onUpdateTask = this.onUpdateTask.bind(this);
-        this.getOngoingTaskId = this.getOngoingTaskId.bind(this);
+        this.getOngoingTask = this.getOngoingTask.bind(this);
     }
 
     async componentWillMount() {
@@ -46,7 +52,7 @@ class App extends Component {
         await this.connectToBlockchain();
         await this.getBalance();
         await this.getCredit();
-        await this.getOngoingTaskId();
+        await this.getOngoingTask();
     }
 
     async loadWeb3() {
@@ -63,7 +69,7 @@ class App extends Component {
     async connectToBlockchain() {
         const web3 = window.web3;
         const accounts = await web3.eth.getAccounts();
-        const deployedTaskPool = new web3.eth.Contract(TaskPool.abi, tokenAddress);
+        const deployedTaskPool = await new web3.eth.Contract(TaskPool.abi, tokenAddress);
         this.setState({
             contract: deployedTaskPool,
             currentAddress: accounts[0],
@@ -74,7 +80,7 @@ class App extends Component {
     async onUpdateTask() {
         const deployedTaskPool = this.state.contract;
         const taskCount = parseInt(await deployedTaskPool.methods.counter().call());
-        let todoTasks = [], ongoingTasks = [], appliedTasks = [], finishedTasks = [];
+        let todoTasks = [], ongoingTasks = [], appliedTasks = [], completedTasks = [], finishedTasks = [], closedTasks = [];
         const isOwner = await deployedTaskPool.methods.getOwnerAddress().call() === this.state.currentAddress;
         if (isOwner) {
             for (var i = 1; i <= taskCount; i++) {
@@ -89,6 +95,9 @@ class App extends Component {
                         break;
                     case "3":
                         ongoingTasks.push(task);
+                        break;
+                    case "4":
+                        closedTasks.push(task);
                         break;
                 }
             }
@@ -105,7 +114,11 @@ class App extends Component {
                         todoTasks.push(task);
                         break;
                     case "3":
-                        finishedTasks.push(task);
+                        if (task.taker === this.state.currentAddress)
+                            finishedTasks.push(task);
+                    case "4":
+                        if (task.taker === this.state.currentAddress)
+                            completedTasks.push(task);
                 }
             }
         }
@@ -113,7 +126,9 @@ class App extends Component {
             todoTasks: todoTasks,
             ongoingTasks: ongoingTasks,
             appliedTasks: appliedTasks,
+            completedTasks: completedTasks,
             finishedTasks: finishedTasks,
+            closedTasks: closedTasks,
             count: taskCount + 1,
             isOwner: isOwner,
         })
@@ -147,10 +162,11 @@ class App extends Component {
         });
     }
 
-    async getOngoingTaskId() {
+    async getOngoingTask() {
         let that = this;
-        await this.state.contract.methods.freelancers(this.state.currentAddress).call().then(function (freelancer) {
-            that.setState({taskId: freelancer.currentTaskId=="0"?null:freelancer.currentTaskId});
+        await this.state.contract.methods.freelancers(this.state.currentAddress).call().then(async function (freelancer) {
+            that.setState({task: freelancer.currentTaskId==="0"?null:
+                    await that.state.contract.methods.tasks(freelancer.currentTaskId).call()});
         });
     }
 
@@ -171,19 +187,19 @@ class App extends Component {
                     <div style={{display: "flex"}}>
                         <Button variant="primary" disabled={true} style={{marginRight: "1vw"}}>Credit
                             Score: {this.state.credit}</Button>
-                        <Button variant={this.state.taskId?'primary':'danger'} disabled={true} style={{marginRight: "1vw"}}>
-                            {this.state.taskId?`Ongoing Task ID: ${this.state.taskId}`:`No Ongoing Task`}</Button>
+                        <Button variant={this.state.task?'primary':'danger'} disabled={true} style={{marginRight: "1vw"}}>
+                            {this.state.task?`Ongoing Task ID: ${this.state.task.taskId}`:`No Ongoing Task`}</Button>
                     </div>
                 }
             </Navbar>
 
             <Container>
                 <Row>
-                    <Col><TaskListPanel title="Todo Task List"
+                    <Col><TaskListPanel titles={["Todo Task List"]}
                                         colNames={["Task ID", "Price(ETH)"]}
                                         colTitle={["taskId", "commissionFee"]}
                                         col={2}
-                                        rows={this.state.todoTasks}
+                                        rows={[this.state.todoTasks]}
                                         isTodo={true}
                                         apply={!this.state.isOwner}
                                         confirmTask={this.state.isOwner}
@@ -215,26 +231,26 @@ class App extends Component {
                                             currentAddress={this.state.currentAddress}
                                             onCreditUpdate={this.getCredit}
                                             updateTask={this.onUpdateTask}
-                                            taskId={this.state.taskId}
-                                            updateOngoingTask={this.getOngoingTaskId}/>
+                                            task={this.state.task}
+                                            updateOngoingTask={this.getOngoingTask}/>
                         </Col>
                     }
                     {
-                        this.state.isOwner ? <Col><OngoingTaskList title="Ongoing Task List"
+                        this.state.isOwner ? <Col><OngoingTaskList titles={["Ongoing Task List", "Closed Task List"]}
                                                                    colNames={["Task ID", "Price(ETH)", "Task Taker"]}
                                                                    col={2}
-                                                                   rows={this.state.ongoingTasks}
+                                                                   rows={[this.state.ongoingTasks, this.state.closedTasks]}
                                                                    onCreditUpdate={this.getCredit}
                                                                    updateTask={this.onUpdateTask}
                                                                    contract={this.state.contract}
                                                                    currentAddress={this.state.currentAddress}
                                                                    onBalanceChange={this.getBalance}/></Col> :
-                            <Col><TaskListPanel title="Applied Task List"
+                            <Col><TaskListPanel titles={["Applied Task List", "Finished Task List", "Completed Task List"]}
                                                 colNames={["Task ID", "Price(ETH)"]}
                                                 colTitle={["taskId", "commissionFee"]}
                                                 col={2}
                                                 cancelApplication
-                                                rows={this.state.appliedTasks}
+                                                rows={[this.state.appliedTasks, this.state.finishedTasks, this.state.completedTasks]}
                                                 isTodo={false}
                                                 contract={this.state.contract}
                                                 currentAddress={this.state.currentAddress}

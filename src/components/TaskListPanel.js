@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Modal, Col, Container, ListGroup, Row, Badge} from "react-bootstrap";
+import {Modal, Col, Container, ListGroup, Row, Badge, Form, DropdownButton, Dropdown,} from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 
 
@@ -18,7 +18,8 @@ class TaskListPanel extends Component {
         super(props);
         this.state = {
             show:false,
-            handleClose:false
+            handleClose:false,
+            currentList: 0,
         }
         this.target = React.createRef();
         this.onProcess = this.onProcess.bind(this);
@@ -97,7 +98,14 @@ class TaskListPanel extends Component {
                         </Button>
                     </Modal.Footer>
                 </Modal>
-                <label style={{backgroundColor: "#f5cb42", borderRadius: "10px"}}>{this.props.title}</label>
+                <DropdownButton style={{backgroundColor: "#f5cb42", borderRadius: "10px", width: "100%"}}
+                                title={this.props.titles[this.state.currentList]}
+                                onSelect={(e)=> this.setState({currentList: e})}>
+                    {this.props.titles.map((item, index) => <Dropdown.Item eventKey={index} >{item}</Dropdown.Item>)}
+                </DropdownButton>
+                {/*<Form.Control className="form-select" style={{backgroundColor: "#f5cb42", borderRadius: "10px"}}>*/}
+                {/*    {this.props.titles.map((item, index) => <option value={index}>{item}</option>)}*/}
+                {/*</Form.Control>*/}
                 <Container style={{backgroundColor: "grey"}}>
                     <Row sm={this.props.col} style={{padding: "10px"}}>
                         {this.props.colNames.map((cn, i) => {
@@ -105,13 +113,13 @@ class TaskListPanel extends Component {
                                 <Col>
                                     <label style={{marginBottom: "10px"}}>{cn}</label>
                                     <ListGroup>
-                                        {this.props.rows && this.props.rows.map((r,j) => {
+                                        {this.props.rows && this.props.rows[this.state.currentList].map((r,j) => {
                                             if (i === 0) {
                                                 return <ListGroup.Item
                                                     action
                                                     style={{backgroundColor: "#3f8b96", color: "white"}}
                                                     ref={this.target}
-                                                    onClick={() => this.setState({show:true, currentTask:this.props.rows[j]})}>
+                                                    onClick={() => this.setState({show:true, currentTask:this.props.rows[this.state.currentList][j]})}>
                                                     {r[this.props.colTitle[i]]}
                                                     <Badge bg={"primary"} pill>{r.applierCount}</Badge>
                                                 </ListGroup.Item>
