@@ -19,7 +19,7 @@
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
     "eject": "react-app-rewired eject",
-    "compile": "npx hardhat run --network localhost scripts/taskPool_deploy.js"
+    "compile": "react-app-rewired npx hardhat run --network localhost scripts/taskPool_deploy.js"
   },
   "eslintConfig": {
     "extends": [
